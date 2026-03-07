@@ -1,0 +1,1 @@
+ALTER TABLE "customers" ADD CONSTRAINT "customers_user_id_identifier_unique" UNIQUE("user_id","identifier");

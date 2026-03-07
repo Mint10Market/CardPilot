@@ -1,0 +1,10 @@
+{
+  "name": "Card Pilot",
+  "short_name": "Card Pilot",
+  "description": "CRM, inventory, sales, and card show tracker for TCG and sports card sellers by Mint 10 Market",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#18181b",
+  "orientation": "any"
+}

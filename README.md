@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Card Pilot
 
-## Getting Started
+**By Mint 10 Market** — All-in-one CRM, inventory, sales/profit, and card show tracker for TCG and sports card sellers.
 
-First, run the development server:
+## Features
+
+- **eBay integration**: Sign in with eBay (OAuth). Sync orders and derive customers. Marketplace Account Deletion webhook for compliance.
+- **CRM**: Customers from eBay buyers and manual entries; list, search, and detail with linked orders.
+- **Inventory**: Manual items and CSV import; ready for eBay inventory sync.
+- **Sales & profit**: eBay orders plus manual sales (e.g. card shows); date filters and CSV export.
+- **Card shows**: Multi-source aggregator with deduplication and credibility; hot/cold meter and vendor count. List and detail (when/where, host, booth info).
+
+## Stack
+
+- Next.js 16 (App Router), TypeScript, Tailwind CSS
+- PostgreSQL (Drizzle ORM) — use Supabase, Neon, or any Postgres
+- eBay OAuth 2.0 and Sell APIs
+
+## Setup
+
+1. **Clone and install**
+
+   ```bash
+   cd "Card Pilot"
+   npm install
+   ```
+
+2. **Database**
+
+   Create a PostgreSQL database and run migrations:
+
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local and set DATABASE_URL
+   npm run db:push
+   ```
+
+3. **eBay Developer**
+
+   - Create an app at [eBay Developer Portal](https://developer.ebay.com/).
+   - Add OAuth redirect URI: `http://localhost:3000/api/auth/ebay/callback` (and your production URL).
+   - Set **EBAY_CLIENT_ID**, **EBAY_CLIENT_SECRET**, **EBAY_REDIRECT_URI**, **EBAY_ENVIRONMENT** (e.g. `sandbox`) in `.env.local`.
+   - For Marketplace Account Deletion: set **EBAY_WEBHOOK_VERIFICATION_TOKEN** (32–80 chars) and register the webhook URL in the portal (Alerts and Notifications).
+
+4. **Session**
+
+   Set **SESSION_SECRET** in `.env.local` (at least 32 characters).
+
+5. **App URL**
+
+   Set **NEXT_PUBLIC_APP_URL** (e.g. `http://localhost:3000` for local).
+
+## Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Click **Connect with eBay** to sign in. After connecting, use **Sync from eBay** on the dashboard to pull orders and customers.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Card shows data
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To load seed shows, call:
 
-## Learn More
+```bash
+curl -X POST http://localhost:3000/api/shows/refresh
+```
 
-To learn more about Next.js, take a look at the following resources:
+In production, run this periodically (cron) or add more source adapters in `src/lib/show-sources/`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `npm run dev` — development server
+- `npm run build` — production build
+- `npm run start` — start production server
+- `npm run db:generate` — generate Drizzle migrations
+- `npm run db:push` — push schema to database
+- `npm run db:migrate` — run migrations
 
-## Deploy on Vercel
+## Environment variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See `.env.example` for all required and optional variables.
