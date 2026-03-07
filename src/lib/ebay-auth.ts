@@ -109,6 +109,35 @@ export function getTokenEndpoint(): string {
   return isSandbox() ? EBAY_SANDBOX_TOKEN : EBAY_PROD_TOKEN;
 }
 
+/** Client credentials grant for app-only APIs (e.g. Notification API getPublicKey). */
+const NOTIFICATION_SCOPE = "https://api.ebay.com/oauth/api_scope";
+
+export async function getEbayClientCredentialsToken(): Promise<string> {
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error("EBAY_CLIENT_ID and EBAY_CLIENT_SECRET must be set");
+  const tokenUrl = isSandbox() ? EBAY_SANDBOX_TOKEN : EBAY_PROD_TOKEN;
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    scope: NOTIFICATION_SCOPE,
+  });
+  const res = await fetch(tokenUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`eBay client credentials failed: ${res.status} ${err}`);
+  }
+  const data = (await res.json()) as { access_token: string };
+  return data.access_token;
+}
+
 const EBAY_SANDBOX_IDENTITY = "https://apiz.sandbox.ebay.com/commerce/identity/v1/user/";
 const EBAY_PROD_IDENTITY = "https://apiz.ebay.com/commerce/identity/v1/user/";
 

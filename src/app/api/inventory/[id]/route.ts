@@ -40,7 +40,7 @@ export async function PATCH(
         ...(body.category !== undefined && { category: body.category?.trim() || null }),
         updatedAt: new Date(),
       })
-      .where(eq(inventoryItems.id, id))
+      .where(and(eq(inventoryItems.id, id), eq(inventoryItems.userId, user.id)))
       .returning();
     return NextResponse.json(updated);
   } catch (e) {
@@ -68,7 +68,7 @@ export async function DELETE(
         { status: 400 }
       );
     }
-    await db.delete(inventoryItems).where(eq(inventoryItems.id, id));
+    await db.delete(inventoryItems).where(and(eq(inventoryItems.id, id), eq(inventoryItems.userId, user.id)));
     return new NextResponse(null, { status: 204 });
   } catch (e) {
     if (e instanceof Error && e.message === "Unauthorized") {

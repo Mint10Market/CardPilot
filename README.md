@@ -38,7 +38,7 @@
 3. **eBay Developer**
 
    - Create an app at [eBay Developer Portal](https://developer.ebay.com/).
-   - Add OAuth redirect URI: `http://localhost:3000/api/auth/ebay/callback` (and your production URL).
+   - Add OAuth redirect URI: `http://localhost:3000/api/auth/ebay/callback` (local) and `https://card-pilot.vercel.app/api/auth/ebay/callback` (production).
    - Set **EBAY_CLIENT_ID**, **EBAY_CLIENT_SECRET**, **EBAY_REDIRECT_URI**, **EBAY_ENVIRONMENT** (e.g. `sandbox`) in `.env.local`.
    - For Marketplace Account Deletion: set **EBAY_WEBHOOK_VERIFICATION_TOKEN** (32–80 chars) and register the webhook URL in the portal (Alerts and Notifications).
 
@@ -48,7 +48,7 @@
 
 5. **App URL**
 
-   Set **NEXT_PUBLIC_APP_URL** (e.g. `http://localhost:3000` for local).
+   Set **NEXT_PUBLIC_APP_URL** (e.g. `http://localhost:3000` for local; production: `https://card-pilot.vercel.app`).
 
 ## Deploy (Vercel)
 
@@ -66,7 +66,7 @@ Vercel MCP is configured in `.cursor/mcp.json`; after Cursor reload and Vercel l
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Click **Connect with eBay** to sign in. After connecting, use **Sync from eBay** on the dashboard to pull orders and customers.
+Open [http://localhost:3000](http://localhost:3000) (local) or [https://card-pilot.vercel.app](https://card-pilot.vercel.app) (production). Click **Connect with eBay** to sign in. After connecting, use **Sync from eBay** on the dashboard to pull orders and customers.
 
 ## Card shows data
 
@@ -76,13 +76,34 @@ To load seed shows, call:
 curl -X POST http://localhost:3000/api/shows/refresh
 ```
 
-In production, run this periodically (cron) or add more source adapters in `src/lib/show-sources/`.
+In production: `curl -X POST https://card-pilot.vercel.app/api/shows/refresh`. Run periodically (cron) or add more source adapters in `src/lib/show-sources/`.
+
+## Run checks before push
+
+Before committing or pushing, run:
+
+```bash
+npm run check
+```
+
+This runs `next lint` and `next build` so you catch lint and build failures locally. For full checks including unit tests:
+
+```bash
+npm run check:full
+```
+
+To test like production locally: `npm run build && npm run start`, then open [http://localhost:3000](http://localhost:3000).
 
 ## Scripts
 
 - `npm run dev` — development server
 - `npm run build` — production build
 - `npm run start` — start production server
+- `npm run lint` — Next.js ESLint
+- `npm run check` — lint + build (run before push)
+- `npm run check:full` — check + unit tests
+- `npm run test` — run unit tests (Vitest)
+- `npm run test:watch` — run tests in watch mode
 - `npm run db:generate` — generate Drizzle migrations
 - `npm run db:push` — push schema to database
 - `npm run db:migrate` — run migrations

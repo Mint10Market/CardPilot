@@ -35,7 +35,7 @@ function normalize(raw: RawShow): Omit<NormalizedShow, "sourceContributions"> {
     address: raw.address?.trim() ?? null,
     city: raw.city?.trim() ?? null,
     state: raw.state?.trim() ?? null,
-    country: raw.country?.trim() ?? "US",
+    country: raw.country?.trim() || "US",
     timezone: raw.timezone?.trim() ?? null,
     organizerName: raw.organizerName?.trim() ?? null,
     organizerEmail: raw.organizerEmail?.trim() ?? null,

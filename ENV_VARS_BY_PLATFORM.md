@@ -1,6 +1,6 @@
 # Environment Variables by Platform
 
-Use this as a checklist. Replace `YOUR_VERCEL_APP_URL` with your real Vercel URL (e.g. `https://card-pilot-abc123.vercel.app`).
+Use this as a checklist. Production app URL: `https://card-pilot.vercel.app`.
 
 ---
 
@@ -22,13 +22,11 @@ Add these in **Vercel → Your Project → Settings → Environment Variables**.
 | `DATABASE_URL` | `postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres` (from Supabase → Database) |
 | `EBAY_CLIENT_ID` | Your eBay app Client ID |
 | `EBAY_CLIENT_SECRET` | Your eBay app Client Secret |
-| `EBAY_REDIRECT_URI` | `https://YOUR_VERCEL_APP_URL/api/auth/ebay/callback` |
+| `EBAY_REDIRECT_URI` | `https://card-pilot.vercel.app/api/auth/ebay/callback` |
 | `EBAY_ENVIRONMENT` | `production` (or `sandbox` for testing) |
 | `EBAY_WEBHOOK_VERIFICATION_TOKEN` | Your 32–80 char webhook verification token |
-| `NEXT_PUBLIC_APP_URL` | `https://YOUR_VERCEL_APP_URL` (your Vercel app URL) |
+| `NEXT_PUBLIC_APP_URL` | `https://card-pilot.vercel.app` |
 | `SESSION_SECRET` | A long random string (min 32 chars) for signing sessions |
-
-**Important:** Set `NEXT_PUBLIC_APP_URL` and `EBAY_REDIRECT_URI` to your **actual** Vercel URL after the first deploy (e.g. `https://card-pilot-xyz.vercel.app`).
 
 ---
 
@@ -60,10 +58,10 @@ Use your real values; this is the shape:
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres
 EBAY_CLIENT_ID=your_ebay_client_id
 EBAY_CLIENT_SECRET=your_ebay_client_secret
-EBAY_REDIRECT_URI=https://your-app.vercel.app/api/auth/ebay/callback
+EBAY_REDIRECT_URI=https://card-pilot.vercel.app/api/auth/ebay/callback
 EBAY_ENVIRONMENT=production
 EBAY_WEBHOOK_VERIFICATION_TOKEN=your_webhook_token
-NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+NEXT_PUBLIC_APP_URL=https://card-pilot.vercel.app
 SESSION_SECRET=your_session_secret_min_32_chars
 ```
 

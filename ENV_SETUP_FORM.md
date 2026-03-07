@@ -38,11 +38,11 @@ Your value:
 
 **EBAY_REDIRECT_URI**  
 - Local: `http://localhost:3000/api/auth/ebay/callback`  
-- Production: `https://yourdomain.com/api/auth/ebay/callback`
+- Production: `https://card-pilot.vercel.app/api/auth/ebay/callback`
 
 Your value:
 ```
-[ paste your EBAY_REDIRECT_URI here, or leave as http://localhost:3000/api/auth/ebay/callback for local ]
+[ paste your EBAY_REDIRECT_URI here; local: http://localhost:3000/api/auth/ebay/callback | production: https://card-pilot.vercel.app/api/auth/ebay/callback ]
 ```
 
 **EBAY_ENVIRONMENT**  
@@ -67,11 +67,11 @@ Your value:
 
 **NEXT_PUBLIC_APP_URL**  
 - Local: `http://localhost:3000`  
-- Production: `https://yourdomain.com`
+- Production: `https://card-pilot.vercel.app`
 
 Your value:
 ```
-[ paste your app URL here ]
+[ paste your app URL here; local: http://localhost:3000 | production: https://card-pilot.vercel.app ]
 ```
 
 ---
@@ -101,6 +101,7 @@ EBAY_ENVIRONMENT=sandbox
 EBAY_WEBHOOK_VERIFICATION_TOKEN=your_32_to_80_char_token
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 SESSION_SECRET=your_session_secret_at_least_32_chars
+# Production: EBAY_REDIRECT_URI=https://card-pilot.vercel.app/api/auth/ebay/callback, NEXT_PUBLIC_APP_URL=https://card-pilot.vercel.app
 ```
 
 When you're done, paste your filled-out values here in chat (you can redact the secret parts if you prefer and we’ll use placeholders for those), and we’ll create `.env.local` for you.

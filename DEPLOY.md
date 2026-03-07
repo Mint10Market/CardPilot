@@ -2,6 +2,8 @@
 
 Do these in order. All commands from the project root: `"Card Pilot"`.
 
+**Before pushing:** Run `npm run check` (lint + build) locally. To test like production: `npm run build && npm run start` then open http://localhost:3000.
+
 ---
 
 ## Do it all in one go (after one-time setup)
@@ -23,11 +25,42 @@ GITHUB_TOKEN=xxx ./scripts/do-it-all.sh
 ./scripts/do-it-all.sh
 ```
 
-For **non-interactive** (CI or no browser): set `VERCEL_TOKEN` from [vercel.com/account/tokens](https://vercel.com/account/tokens), then:
+For **non-interactive** (CI or no browser): set `VERCEL_TOKEN` and optionally `GITHUB_TOKEN`, then run the script (see below).
 
-```bash
-VERCEL_TOKEN=xxx ./scripts/do-it-all.sh https://github.com/USER/REPO.git
-```
+---
+
+## Where to get tokens (and where to put them)
+
+### Vercel token
+
+- **Get it:** Go to [vercel.com/account/tokens](https://vercel.com/account/tokens) → **Create** → name it (e.g. “Card Pilot deploy”) → copy the token. You won’t see it again.
+- **Put it:** Only in your environment when you run the script. **Do not** commit it or add it to `.env.example`.
+
+  **Option A – In the same command (recommended):**
+  ```bash
+  VERCEL_TOKEN=your_token_here ./scripts/do-it-all.sh https://github.com/USER/REPO.git
+  ```
+
+  **Option B – In your shell for the session:**
+  ```bash
+  export VERCEL_TOKEN=your_token_here
+  ./scripts/do-it-all.sh https://github.com/USER/REPO.git
+  ```
+
+  **Option C – In `.env.local` (only if you want the script to read it):**  
+  Add `VERCEL_TOKEN=your_token_here` to `.env.local`. The script does **not** load `.env.local` by default; you’d need to run `source .env.local` (or use `dotenv`/`env-cmd`) before the script. Easiest is Option A or B.
+
+### GitHub token (optional – only if you want the script to create the repo for you)
+
+- **Get it:** [GitHub → Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens) → **Generate new token (classic)** → enable scope **`repo`** → generate and copy the token.
+- **Put it:** Same as Vercel – only in the environment when you run the script, never in a file you commit.
+
+  ```bash
+  GITHUB_TOKEN=your_github_token ./scripts/do-it-all.sh
+  ```
+
+  If you create the repo manually at [github.com/new](https://github.com/new), you don’t need a GitHub token; just pass the repo URL:  
+  `./scripts/do-it-all.sh https://github.com/YOUR_USERNAME/card-pilot.git`
 
 ---
 
@@ -71,7 +104,7 @@ cd "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot"
 npx vercel --prod
 ```
 
-Use the URL it prints (e.g. `https://card-pilot-xxx.vercel.app`).
+Use the URL it prints (e.g. `https://card-pilot.vercel.app`).
 
 **Option B – Deploy from Vercel (after push)**
 
@@ -85,10 +118,10 @@ Use the URL it prints (e.g. `https://card-pilot-xxx.vercel.app`).
 ## 4. After first deploy
 
 1. In Vercel → Project → **Settings → Environment Variables**, set:
-   - `NEXT_PUBLIC_APP_URL` = your live URL (e.g. `https://card-pilot-xxx.vercel.app`)
-   - `EBAY_REDIRECT_URI` = `https://YOUR_VERCEL_APP_URL/api/auth/ebay/callback`
+   - `NEXT_PUBLIC_APP_URL` = `https://card-pilot.vercel.app`
+   - `EBAY_REDIRECT_URI` = `https://card-pilot.vercel.app/api/auth/ebay/callback`
 2. In **eBay Developer Portal** → your app → OAuth / RuName, add this redirect URI:  
-   `https://YOUR_VERCEL_APP_URL/api/auth/ebay/callback`
+   `https://card-pilot.vercel.app/api/auth/ebay/callback`
 3. (Optional) Run DB migrations if needed:  
    `DATABASE_URL=your_supabase_url npm run db:push`
 

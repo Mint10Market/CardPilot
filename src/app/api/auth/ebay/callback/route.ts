@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { exchangeCodeForTokens, getEbayUser } from "@/lib/ebay-auth";
+import { logger } from "@/lib/logger";
 import { createSession, getSessionCookieName, SESSION_MAX_AGE } from "@/lib/session";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -53,7 +54,11 @@ export async function GET(request: NextRequest) {
           tokenExpiresAt: expiresAt,
         })
         .returning({ id: users.id });
-      userId = inserted!.id;
+      if (!inserted) {
+        logger.error("eBay callback: user insert returned no row");
+        return NextResponse.redirect(`${url}/?error=auth_failed`);
+      }
+      userId = inserted.id;
     }
 
     const token = await createSession({ userId, ebayUserId: ebayUser.userId });
@@ -65,10 +70,10 @@ export async function GET(request: NextRequest) {
       maxAge: SESSION_MAX_AGE,
       path: "/",
     });
-    cookieStore.delete("ebay_oauth_state");
+    res.cookies.delete("ebay_oauth_state");
     return res;
   } catch (e) {
-    console.error("eBay callback error:", e);
+    logger.error("eBay callback error:", e);
     return NextResponse.redirect(`${url}/?error=auth_failed`);
   }
 }

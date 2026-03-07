@@ -25,7 +25,8 @@ export async function getValidAccessToken(userId: string): Promise<string> {
   if (!user) throw new Error("User not found");
   const expiresAt = new Date(user.tokenExpiresAt).getTime();
   const now = Date.now();
-  if (expiresAt > now + 60 * 5) return user.accessToken;
+  const fiveMinutesMs = 60 * 5 * 1000;
+  if (expiresAt > now + fiveMinutesMs) return user.accessToken;
   const refreshed = await refreshEbayAccessToken(user.refreshToken);
   const newExpiresAt = new Date(Date.now() + refreshed.expires_in * 1000);
   await db

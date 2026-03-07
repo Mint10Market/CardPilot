@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { verifyEbayWebhookSignature } from "@/lib/ebay-webhook-signature";
 
 const VERIFICATION_TOKEN = process.env.EBAY_WEBHOOK_VERIFICATION_TOKEN!;
 
@@ -26,9 +27,15 @@ export async function POST(request: NextRequest) {
   if (!VERIFICATION_TOKEN) {
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
   }
+  const rawBody = await request.text();
+  const signatureHeader = request.headers.get("x-ebay-signature");
+  const isValid = await verifyEbayWebhookSignature(signatureHeader, rawBody);
+  if (!isValid) {
+    return new NextResponse(null, { status: 412 });
+  }
   let body: Payload;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody) as Payload;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }

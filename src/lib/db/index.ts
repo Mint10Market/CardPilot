@@ -7,7 +7,7 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set");
 }
 
-// For serverless (e.g. Vercel) use postgres.js with max 1 connection in serverless env
-const client = postgres(connectionString, { max: 10 });
+// Serverless (e.g. Vercel): use max 1 to avoid connection pool exhaustion per invocation
+const client = postgres(connectionString, { max: 1 });
 export const db = drizzle(client, { schema });
 export * from "./schema";
