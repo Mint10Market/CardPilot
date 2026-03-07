@@ -28,11 +28,10 @@ If you use **GitHub**:
 
 ```bash
 cd "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot"
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-git push -u origin main
+./scripts/set-remote-and-push.sh https://github.com/YOUR_USERNAME/YOUR_REPO.git
 ```
 
-If the repo already exists and has a different name/branch, use the URL it shows (e.g. `git@github.com:...`).
+Or manually: `git remote add origin <url>` then `git push -u origin main`. If the repo already exists and has a different name/branch, use the URL it shows (e.g. `git@github.com:...`).
 
 ---
 
