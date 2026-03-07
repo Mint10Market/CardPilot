@@ -50,6 +50,16 @@
 
    Set **NEXT_PUBLIC_APP_URL** (e.g. `http://localhost:3000` for local).
 
+## Deploy (Vercel)
+
+See **[DEPLOY.md](DEPLOY.md)** for the full runbook. Summary:
+
+1. **One-time:** In a terminal, run `npx vercel login` and `npx vercel link --yes` in this directory.
+2. **Push (optional):** Add a Git remote (e.g. GitHub) and `git push origin main` so Vercel can auto-deploy from Git.
+3. **Deploy:** Run `./scripts/deploy.sh` or `npx vercel --prod`. Or use a [Vercel token](https://vercel.com/account/tokens): `VERCEL_TOKEN=xxx ./scripts/deploy.sh`.
+
+Vercel MCP is configured in `.cursor/mcp.json`; after Cursor reload and Vercel login in MCP, you can list projects and inspect deployments from Cursor.
+
 ## Run
 
 ```bash
