@@ -4,6 +4,33 @@ Do these in order. All commands from the project root: `"Card Pilot"`.
 
 ---
 
+## Do it all in one go (after one-time setup)
+
+Once you have:
+
+1. Run **once**: `npx vercel login` (and optionally `npx vercel link --yes` in this folder).
+2. Created a GitHub repo (or set `GITHUB_TOKEN` to create it via API).
+
+Run:
+
+```bash
+cd "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot"
+# With repo URL (if you created the repo manually):
+./scripts/do-it-all.sh https://github.com/YOUR_USERNAME/YOUR_REPO.git
+# Or with GITHUB_TOKEN set (script will create repo from package.json name):
+GITHUB_TOKEN=xxx ./scripts/do-it-all.sh
+# Or deploy only (remote already set): just deploy:
+./scripts/do-it-all.sh
+```
+
+For **non-interactive** (CI or no browser): set `VERCEL_TOKEN` from [vercel.com/account/tokens](https://vercel.com/account/tokens), then:
+
+```bash
+VERCEL_TOKEN=xxx ./scripts/do-it-all.sh https://github.com/USER/REPO.git
+```
+
+---
+
 ## 1. One-time: Vercel login and link
 
 In a terminal (outside Cursor sandbox):
