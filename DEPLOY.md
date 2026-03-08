@@ -113,6 +113,13 @@ Use the URL it prints (e.g. `https://card-pilot.vercel.app`).
 3. Add the same env vars you use in Supabase/Trigger (see `ENV_VARS_BY_PLATFORM.md`).
 4. Deploy. Future pushes to `main` will auto-deploy.
 
+**Make sure PRs and main redeploy Vercel**
+
+- With the project **connected to GitHub** (imported in step 2), Vercel automatically:
+  - **Production:** redeploys when you push (or merge a PR) to the **Production Branch** (e.g. `main`).
+  - **Preview:** creates a preview deployment for every push to any branch, including branches that have an open PR.
+- To confirm: Vercel → your project → **Settings → Git** → check **Production Branch** (e.g. `main`) and that **Vercel for GitHub** is connected. No code change is required; re-deploys are triggered by Git events.
+
 ---
 
 ## 4. After first deploy
