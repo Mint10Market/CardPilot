@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const savedState = cookieStore.get("ebay_oauth_state")?.value;
   const url = baseUrl(request);
-  const redirectUri = `${request.nextUrl.origin}/api/auth/ebay/callback`;
+  // Must match the redirect_uri sent to eBay (use env if set so it matches registered URI).
+  const redirectUri =
+    process.env.EBAY_REDIRECT_URI ||
+    `${request.nextUrl.origin}/api/auth/ebay/callback`;
 
   if (!code) return NextResponse.redirect(`${url}/?error=missing_code`);
   if (state !== savedState) return NextResponse.redirect(`${url}/?error=invalid_state`);

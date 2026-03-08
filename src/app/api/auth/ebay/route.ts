@@ -4,7 +4,10 @@ import { randomBytes } from "crypto";
 
 export async function GET(request: NextRequest) {
   const state = randomBytes(24).toString("hex");
-  const redirectUri = `${request.nextUrl.origin}/api/auth/ebay/callback`;
+  // Use EBAY_REDIRECT_URI when set so it matches the URI registered in eBay Developer Portal exactly.
+  const redirectUri =
+    process.env.EBAY_REDIRECT_URI ||
+    `${request.nextUrl.origin}/api/auth/ebay/callback`;
   const url = getEbayAuthUrl(state, redirectUri);
   const res = NextResponse.redirect(url);
   const isProd = process.env.NODE_ENV === "production";
