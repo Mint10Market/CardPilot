@@ -1,0 +1,15 @@
+# Trigger Vercel deploy on push to main (use when Git integration doesn't create deployments).
+# Add secret: GitHub repo → Settings → Secrets → Actions → VERCEL_DEPLOY_HOOK_URL
+# Get the URL: Vercel → Project → Settings → Git → Deploy Hooks → Create (name: "main", branch: main) → copy URL
+name: Trigger Vercel Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -sS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            --fail-with-body || true

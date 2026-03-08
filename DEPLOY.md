@@ -113,9 +113,9 @@ Use the URL it prints (e.g. `https://card-pilot.vercel.app`).
 3. Add the same env vars you use in Supabase/Trigger (see `ENV_VARS_BY_PLATFORM.md`).
 4. Deploy. Future pushes to `main` will auto-deploy.
 
-**Make sure PRs and main redeploy Vercel**
+**If Git doesn’t trigger deployments**
 
-- With the project **connected to GitHub** (imported in step 2), Vercel automatically redeploys on push. If pushes to `main` don’t create a deployment: Vercel → your project → **Settings → Git** → connect the repo (e.g. **Mint10Market/CardPilot**) and set **Production Branch** to `main`.
+- Add a **Deploy Hook**: Vercel → project → **Settings → Git** → **Deploy Hooks** → Create (e.g. name “main”, branch `main`) → copy the URL. In GitHub → repo → **Settings → Secrets and variables → Actions** → New secret: name **VERCEL_DEPLOY_HOOK_URL**, value = that URL. Each push to `main` will then trigger a deploy via the workflow.
 
 ---
 
