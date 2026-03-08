@@ -45,6 +45,12 @@ export function AppShell({
               Customers
             </Link>
             <Link
+              href="/collection"
+              className="text-[var(--muted)] hover:text-[var(--foreground)]"
+            >
+              Collection
+            </Link>
+            <Link
               href="/shows"
               className="text-[var(--muted)] hover:text-[var(--foreground)]"
             >

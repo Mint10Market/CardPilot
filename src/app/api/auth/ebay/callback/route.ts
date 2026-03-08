@@ -73,7 +73,9 @@ export async function GET(request: NextRequest) {
     res.cookies.delete("ebay_oauth_state");
     return res;
   } catch (e) {
-    logger.error("eBay callback error:", e);
+    const err = e instanceof Error ? e : new Error(String(e));
+    logger.error("eBay callback error: %s", err.message);
+    if (err.stack) logger.error("%s", err.stack);
     return NextResponse.redirect(`${url}/?error=auth_failed`);
   }
 }

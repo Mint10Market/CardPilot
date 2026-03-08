@@ -7,9 +7,9 @@ export async function POST(request: Request) {
   try {
     const user = await requireUser();
     const url = new URL(request.url);
-    const daysBack = url.searchParams.get("daysBack")
-      ? parseInt(url.searchParams.get("daysBack")!, 10)
-      : 90;
+    const raw = url.searchParams.get("daysBack");
+    const parsed = raw != null ? parseInt(raw, 10) : NaN;
+    const daysBack = Number.isFinite(parsed) ? parsed : 90;
     const { count } = await syncOrdersForUser(user.id, { daysBack });
     return NextResponse.json({ ok: true, count });
   } catch (e) {

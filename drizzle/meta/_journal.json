@@ -15,6 +15,13 @@
       "when": 1772679793135,
       "tag": "0001_sleepy_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772931675506,
+      "tag": "0002_curved_steel_serpent",
+      "breakpoints": true
     }
   ]
 }

@@ -42,6 +42,7 @@ export async function PATCH(
       })
       .where(and(eq(inventoryItems.id, id), eq(inventoryItems.userId, user.id)))
       .returning();
+    if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (e) {
     if (e instanceof Error && e.message === "Unauthorized") {
