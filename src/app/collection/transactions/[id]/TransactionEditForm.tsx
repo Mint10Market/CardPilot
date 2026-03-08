@@ -41,6 +41,7 @@ export function TransactionEditForm({ transaction: t }: { transaction: Transacti
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,32 +49,35 @@ export function TransactionEditForm({ transaction: t }: { transaction: Transacti
     setSaving(true);
     const form = e.currentTarget;
     const fd = new FormData(form);
+    // Only include fields that are in the DOM so we don't send null for hidden "Details" fields and overwrite DB values.
     const body: Record<string, unknown> = {
       purcDate: fd.get("purcDate") || null,
-      purcSource: fd.get("purcSource") || null,
-      shippingCost: fd.get("shippingCost") ?? 0,
-      qty: fd.get("qty") ? Number(fd.get("qty")) : null,
       year: fd.get("year") || null,
       setName: fd.get("setName") || null,
-      variation: fd.get("variation") || null,
-      cardType: fd.get("cardType") || null,
       playerCharacter: fd.get("playerCharacter") || null,
       sport: fd.get("sport") || null,
-      team: fd.get("team") || null,
-      cardNotes: fd.get("cardNotes") || null,
-      attributes: fd.get("attributes") || null,
-      numberedTo: fd.get("numberedTo") || null,
-      grade: fd.get("grade") || null,
-      gradingCompany: fd.get("gradingCompany") || null,
-      certNumber: fd.get("certNumber") || null,
       cardPurcPrice: fd.get("cardPurcPrice") ? Number(fd.get("cardPurcPrice")) : null,
       soldDate: fd.get("soldDate") || null,
       sellPrice: fd.get("sellPrice") ? Number(fd.get("sellPrice")) : null,
-      soldSource: fd.get("soldSource") || null,
-      stateSold: fd.get("stateSold") || null,
-      feeType: fd.get("feeType") || null,
-      notes: fd.get("notes") || null,
     };
+    if (showDetails) {
+      body.purcSource = fd.get("purcSource") || null;
+      body.shippingCost = fd.get("shippingCost") ?? 0;
+      body.qty = fd.get("qty") ? Number(fd.get("qty")) : null;
+      body.team = fd.get("team") || null;
+      body.variation = fd.get("variation") || null;
+      body.cardType = fd.get("cardType") || null;
+      body.cardNotes = fd.get("cardNotes") || null;
+      body.attributes = fd.get("attributes") || null;
+      body.numberedTo = fd.get("numberedTo") || null;
+      body.grade = fd.get("grade") || null;
+      body.gradingCompany = fd.get("gradingCompany") || null;
+      body.certNumber = fd.get("certNumber") || null;
+      body.soldSource = fd.get("soldSource") || null;
+      body.stateSold = fd.get("stateSold") || null;
+      body.feeType = fd.get("feeType") || null;
+      body.notes = fd.get("notes") || null;
+    }
     const res = await fetch(`/api/collection/transactions/${t.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -93,23 +97,12 @@ export function TransactionEditForm({ transaction: t }: { transaction: Transacti
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-[var(--error)]">{error}</p>}
+      <p className="text-xs text-[var(--muted)] font-medium">Essential</p>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-[var(--muted)] mb-1">Purc. date</label>
           <input name="purcDate" type="date" defaultValue={toInputDate(t.purcDate)} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Purc. source</label>
-          <input name="purcSource" defaultValue={t.purcSource ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Shipping cost</label>
-          <input name="shippingCost" type="number" step="0.01" defaultValue={t.shippingCost ?? 0} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Qty</label>
-          <input name="qty" type="number" defaultValue={t.qty ?? ""} className={inputClass} />
         </div>
         <div>
           <label className="block text-xs text-[var(--muted)] mb-1">Year</label>
@@ -128,18 +121,6 @@ export function TransactionEditForm({ transaction: t }: { transaction: Transacti
           <input name="sport" defaultValue={t.sport ?? ""} className={inputClass} />
         </div>
         <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Team</label>
-          <input name="team" defaultValue={t.team ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Variation</label>
-          <input name="variation" defaultValue={t.variation ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Card type</label>
-          <input name="cardType" defaultValue={t.cardType ?? ""} className={inputClass} />
-        </div>
-        <div>
           <label className="block text-xs text-[var(--muted)] mb-1">Card purc. price</label>
           <input name="cardPurcPrice" type="number" step="0.01" defaultValue={t.cardPurcPrice ?? ""} className={inputClass} />
         </div>
@@ -151,51 +132,90 @@ export function TransactionEditForm({ transaction: t }: { transaction: Transacti
           <label className="block text-xs text-[var(--muted)] mb-1">Sell price</label>
           <input name="sellPrice" type="number" step="0.01" defaultValue={t.sellPrice ?? ""} className={inputClass} />
         </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Sold source</label>
-          <input name="soldSource" defaultValue={t.soldSource ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">State sold</label>
-          <input name="stateSold" defaultValue={t.stateSold ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Fee type</label>
-          <input name="feeType" defaultValue={t.feeType ?? ""} className={inputClass} />
-        </div>
-        <div className="col-span-2">
-          <label className="block text-xs text-[var(--muted)] mb-1">Card notes</label>
-          <input name="cardNotes" defaultValue={t.cardNotes ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Attributes</label>
-          <input name="attributes" defaultValue={t.attributes ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">#'d to</label>
-          <input name="numberedTo" defaultValue={t.numberedTo ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Grade</label>
-          <input name="grade" defaultValue={t.grade ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Grading company</label>
-          <input name="gradingCompany" defaultValue={t.gradingCompany ?? ""} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Cert number</label>
-          <input name="certNumber" defaultValue={t.certNumber ?? ""} className={inputClass} />
-        </div>
-        <div className="col-span-2">
-          <label className="block text-xs text-[var(--muted)] mb-1">Notes</label>
-          <input name="notes" defaultValue={t.notes ?? ""} className={inputClass} />
-        </div>
       </div>
+      {!showDetails ? (
+        <button
+          type="button"
+          onClick={() => setShowDetails(true)}
+          className="text-sm text-[var(--muted)] underline"
+        >
+          More options
+        </button>
+      ) : (
+        <>
+          <p className="text-xs text-[var(--muted)] font-medium pt-2">Details</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Purc. source</label>
+              <input name="purcSource" defaultValue={t.purcSource ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Shipping cost</label>
+              <input name="shippingCost" type="number" step="0.01" defaultValue={t.shippingCost ?? 0} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Qty</label>
+              <input name="qty" type="number" defaultValue={t.qty ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Team</label>
+              <input name="team" defaultValue={t.team ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Variation</label>
+              <input name="variation" defaultValue={t.variation ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Card type</label>
+              <input name="cardType" defaultValue={t.cardType ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Sold source</label>
+              <input name="soldSource" defaultValue={t.soldSource ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">State sold</label>
+              <input name="stateSold" defaultValue={t.stateSold ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Fee type</label>
+              <input name="feeType" defaultValue={t.feeType ?? ""} className={inputClass} />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs text-[var(--muted)] mb-1">Card notes</label>
+              <input name="cardNotes" defaultValue={t.cardNotes ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Attributes</label>
+              <input name="attributes" defaultValue={t.attributes ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">#'d to</label>
+              <input name="numberedTo" defaultValue={t.numberedTo ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Grade</label>
+              <input name="grade" defaultValue={t.grade ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Grading company</label>
+              <input name="gradingCompany" defaultValue={t.gradingCompany ?? ""} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Cert number</label>
+              <input name="certNumber" defaultValue={t.certNumber ?? ""} className={inputClass} />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs text-[var(--muted)] mb-1">Notes</label>
+              <input name="notes" defaultValue={t.notes ?? ""} className={inputClass} />
+            </div>
+          </div>
+        </>
+      )}
       <button
         type="submit"
         disabled={saving}
-        className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium disabled:opacity-50"
+        className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium disabled:opacity-50 min-h-[var(--touch-target-min)]"
       >
         {saving ? "Saving…" : "Save"}
       </button>

@@ -24,7 +24,7 @@ export function InventoryList() {
       .then((r) => r.json())
       .then(setList)
       .catch(() => setList([]))
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false), () => setLoading(false));
 
   useEffect(() => {
     load();

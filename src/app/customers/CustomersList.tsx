@@ -23,7 +23,7 @@ export function CustomersList() {
       .then((r) => r.json())
       .then(setList)
       .catch(() => setList([]))
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false), () => setLoading(false));
   }, [search]);
 
   if (loading) return <p className="text-zinc-500">Loading…</p>;

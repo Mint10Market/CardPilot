@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth-server";
 import { db } from "@/lib/db";
 import { customers } from "@/lib/db/schema";
-import { eq, and, ilike } from "drizzle-orm";
+import { eq, and, ilike, asc, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       where: search
         ? and(eq(customers.userId, user.id), ilike(customers.identifier, `%${search}%`))
         : eq(customers.userId, user.id),
-      orderBy: (c, { asc }) => [asc(c.displayName ?? c.identifier)],
+      orderBy: [asc(sql`coalesce(${customers.displayName}, ${customers.identifier})`)],
     });
     return NextResponse.json(list);
   } catch (e) {

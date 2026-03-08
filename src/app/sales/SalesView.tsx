@@ -32,7 +32,7 @@ export function SalesView() {
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData(null))
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false), () => setLoading(false));
   };
 
   useEffect(() => {

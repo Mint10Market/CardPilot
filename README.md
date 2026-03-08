@@ -78,6 +78,16 @@ curl -X POST http://localhost:3000/api/shows/refresh
 
 In production: `curl -X POST https://card-pilot.vercel.app/api/shows/refresh`. Run periodically (cron) or add more source adapters in `src/lib/show-sources/`.
 
+## Scheduled eBay sync (Vercel Cron)
+
+The app syncs eBay orders for all users on a schedule via **Vercel Cron**. No separate trigger or automation tool is required.
+
+- **Config:** `vercel.json` defines one cron: path `/api/sync/scheduled` every 6 hours (`0 */6 * * *`). Vercel Cron sends **GET** requests; the route handles both GET and POST.
+- **Secret:** In Vercel → Project → Settings → Environment Variables, set **CRON_SECRET** to a long random string. Vercel sends `Authorization: Bearer <CRON_SECRET>` when invoking the cron; the route rejects requests without it.
+- **Result:** Each run syncs the last 90 days of orders for every user and updates their "Last synced" status on the dashboard.
+
+If your Vercel plan does not support Cron Jobs, use an external cron (e.g. [cron-job.org](https://cron-job.org)) to call `https://your-app.vercel.app/api/sync/scheduled` with header `Authorization: Bearer YOUR_CRON_SECRET` on the same schedule.
+
 ## Run checks before push
 
 Before committing or pushing, run:
@@ -106,7 +116,7 @@ To test like production locally: `npm run build && npm run start`, then open [ht
 - `npm run test:watch` — run tests in watch mode
 - `npm run db:generate` — generate Drizzle migrations
 - `npm run db:push` — push schema to database
-- `npm run db:migrate` — run migrations
+- `npm run db:migrate` — run migrations (uses `DATABASE_URL` from `.env.local`). If you use Supabase and migrate fails locally, run `scripts/run-migration-0003.sql` in Supabase → SQL Editor instead.
 
 ## Environment variables
 

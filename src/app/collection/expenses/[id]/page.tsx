@@ -20,6 +20,12 @@ export default async function ExpenseEditPage({
   });
   if (!row) notFound();
 
+  const expense = {
+    ...row,
+    expenseDate: row.expenseDate instanceof Date ? row.expenseDate.toISOString().slice(0, 10) : String(row.expenseDate ?? ""),
+    amount: String(row.amount ?? ""),
+  };
+
   return (
     <AppShell title="Edit expense">
       <div className="space-y-4">
@@ -29,7 +35,7 @@ export default async function ExpenseEditPage({
         >
           ← Back to Expenses
         </Link>
-        <ExpenseEditForm expense={row} />
+        <ExpenseEditForm expense={expense} />
       </div>
     </AppShell>
   );

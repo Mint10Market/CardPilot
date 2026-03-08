@@ -26,7 +26,7 @@ export function SportsView() {
       .then((r) => r.json())
       .then(setRows)
       .catch(() => setRows([]))
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false), () => setLoading(false));
   }, []);
 
   if (loading) return <p className="text-[var(--muted)]">Loading…</p>;

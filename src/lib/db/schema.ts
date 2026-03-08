@@ -18,6 +18,10 @@ export const users = pgTable("users", {
   accessToken: text("access_token").notNull(),
   refreshToken: text("refresh_token").notNull(), // encrypt at application layer
   tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }).notNull(),
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  lastSyncStatus: text("last_sync_status"), // "success" | "error"
+  lastSyncCount: integer("last_sync_count"),
+  lastSyncError: text("last_sync_error"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

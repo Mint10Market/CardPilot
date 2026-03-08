@@ -23,6 +23,13 @@ export default async function TransactionEditPage({
   });
   if (!row) notFound();
 
+  const toDateStr = (d: Date | null) => (d instanceof Date ? d.toISOString().slice(0, 10) : d ? String(d).slice(0, 10) : null);
+  const transaction = {
+    ...row,
+    purcDate: toDateStr(row.purcDate),
+    soldDate: toDateStr(row.soldDate),
+  };
+
   return (
     <AppShell title="Edit transaction">
       <div className="space-y-4">
@@ -32,7 +39,7 @@ export default async function TransactionEditPage({
         >
           ← Back to Card Transactions
         </Link>
-        <TransactionEditForm transaction={row} />
+        <TransactionEditForm transaction={transaction} />
       </div>
     </AppShell>
   );

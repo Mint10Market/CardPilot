@@ -32,7 +32,7 @@ export function SummaryView() {
       .then((r) => r.json())
       .then(setSummary)
       .catch(() => setSummary(null))
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false), () => setLoading(false));
   }, [year, view]);
 
   if (loading && !summary) return <p className="text-[var(--muted)]">Loading…</p>;

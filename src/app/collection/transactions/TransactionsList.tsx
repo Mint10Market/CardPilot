@@ -24,7 +24,8 @@ export function TransactionsList() {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
-  const limit = 50;
+  const [showMoreFields, setShowMoreFields] = useState(false);
+  const limit = 20;
 
   const load = () => {
     setLoading(true);
@@ -35,7 +36,7 @@ export function TransactionsList() {
       .then((r) => r.json())
       .then((d) => (d.items ? setData({ items: d.items, total: d.total, limit: d.limit, offset: d.offset }) : setData(null)))
       .catch(() => setData(null))
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false), () => setLoading(false));
   };
 
   useEffect(() => {
@@ -107,7 +108,7 @@ export function TransactionsList() {
         <button
           type="button"
           onClick={() => setShowAdd(!showAdd)}
-          className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium min-h-[44px]"
+          className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium min-h-[var(--touch-target-min)]"
         >
           {showAdd ? "Cancel" : "Add transaction"}
         </button>
@@ -121,25 +122,41 @@ export function TransactionsList() {
 
       {showAdd && (
         <form onSubmit={handleAdd} className="rounded-[var(--radius)] border border-[var(--border)] p-4 bg-[var(--card)] space-y-3 max-w-2xl">
+          <p className="text-xs text-[var(--muted)] font-medium">Essential</p>
           <div className="grid grid-cols-2 gap-3">
             <input name="purcDate" type="date" placeholder="Purc. date" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="purcSource" placeholder="Purc. source" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="shippingCost" type="number" step="0.01" placeholder="Shipping" defaultValue={0} className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="qty" type="number" placeholder="Qty" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
             <input name="year" placeholder="Year" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
             <input name="setName" placeholder="Set" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="playerCharacter" placeholder="Player" className="rounded border border-[var(--border)] px-3 py-2 text-sm col-span-2" />
+            <input name="playerCharacter" placeholder="Player" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
             <input name="sport" placeholder="Sport" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="team" placeholder="Team" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="cardPurcPrice" type="number" step="0.01" placeholder="Card price" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
+            <input name="cardPurcPrice" type="number" step="0.01" placeholder="Card price" defaultValue={0} className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
             <input name="soldDate" type="date" placeholder="Sold date" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
             <input name="sellPrice" type="number" step="0.01" placeholder="Sell price" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="soldSource" placeholder="Sold source" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="stateSold" placeholder="State sold" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
-            <input name="feeType" placeholder="Fee type" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
           </div>
-          <input name="notes" placeholder="Notes" className="w-full rounded border border-[var(--border)] px-3 py-2 text-sm" />
-          <button type="submit" className="rounded bg-[var(--foreground)] text-[var(--background)] px-3 py-1.5 text-sm font-medium">Save</button>
+          {!showMoreFields ? (
+            <button
+              type="button"
+              onClick={() => setShowMoreFields(true)}
+              className="text-sm text-[var(--muted)] underline"
+            >
+              More options
+            </button>
+          ) : (
+            <>
+              <p className="text-xs text-[var(--muted)] font-medium pt-2">Details</p>
+              <div className="grid grid-cols-2 gap-3">
+                <input name="purcSource" placeholder="Purc. source" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
+                <input name="shippingCost" type="number" step="0.01" placeholder="Shipping" defaultValue={0} className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
+                <input name="qty" type="number" placeholder="Qty" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
+                <input name="team" placeholder="Team" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
+                <input name="soldSource" placeholder="Sold source" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
+                <input name="stateSold" placeholder="State sold" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
+                <input name="feeType" placeholder="Fee type" className="rounded border border-[var(--border)] px-3 py-2 text-sm" />
+              </div>
+              <input name="notes" placeholder="Notes" className="w-full rounded border border-[var(--border)] px-3 py-2 text-sm" />
+            </>
+          )}
+          <button type="submit" className="rounded bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium min-h-[var(--touch-target-min)]">Save</button>
         </form>
       )}
 

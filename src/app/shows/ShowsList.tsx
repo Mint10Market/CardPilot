@@ -32,7 +32,7 @@ export function ShowsList() {
       .then((r) => r.json())
       .then(setList)
       .catch(() => setList([]))
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false), () => setLoading(false));
   }, [from, to, state]);
 
   if (loading) return <p className="text-zinc-500">Loading…</p>;

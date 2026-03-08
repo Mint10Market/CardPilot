@@ -20,7 +20,7 @@ export function CollectionSettingsForm() {
       .then((r) => r.json())
       .then(setSettings)
       .catch(() => setSettings(null))
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false), () => setLoading(false));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,7 +51,7 @@ export function CollectionSettingsForm() {
 
   if (loading) return <p className="text-[var(--muted)]">Loading…</p>;
 
-  const s = settings ?? {};
+  const s = (settings ?? {}) as Partial<Settings>;
   const inputClass = "rounded border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm w-full max-w-xs";
 
   return (

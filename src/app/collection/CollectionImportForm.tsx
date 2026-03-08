@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useFeedback } from "@/components/FeedbackContext";
 
 export function CollectionImportForm() {
+  const { showToast } = useFeedback();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
@@ -30,17 +32,24 @@ export function CollectionImportForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Import failed");
+        const errMsg = data.error ?? "Import failed";
+        setError(errMsg);
+        showToast(errMsg, "error");
         return;
       }
-      setResult({
-        cardTransactions: data.cardTransactions ?? 0,
-        expenses: data.expenses ?? 0,
-        referenceUpdated: data.referenceUpdated ?? false,
-      });
+      const cardTransactions = data.cardTransactions ?? 0;
+      const expenses = data.expenses ?? 0;
+      const referenceUpdated = data.referenceUpdated ?? false;
+      setResult({ cardTransactions, expenses, referenceUpdated });
       setFile(null);
+      const successMsg =
+        `Imported ${cardTransactions} card transactions, ${expenses} expenses.` +
+        (referenceUpdated ? " State tax rates updated." : "");
+      showToast(successMsg, "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed");
+      const errMsg = err instanceof Error ? err.message : "Import failed";
+      setError(errMsg);
+      showToast(errMsg, "error");
     } finally {
       setLoading(false);
     }
@@ -67,7 +76,7 @@ export function CollectionImportForm() {
       <p className="text-sm text-[var(--muted)]">
         Imports Card Transactions, Expenses, and Sales Tax reference data. This replaces your current collection data.
       </p>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-[var(--error)]">{error}</p>}
       {result && (
         <p className="text-sm text-[var(--foreground)]">
           Imported {result.cardTransactions} card transactions, {result.expenses} expenses.
@@ -77,7 +86,7 @@ export function CollectionImportForm() {
       <button
         type="submit"
         disabled={loading || !file}
-        className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium disabled:opacity-50 min-h-[44px]"
+        className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium disabled:opacity-50 min-h-[var(--touch-target-min)]"
       >
         {loading ? "Importing…" : "Import"}
       </button>

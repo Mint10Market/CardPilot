@@ -11,6 +11,10 @@
   --radius: 0.5rem;
   --spacing-page: 1rem;
   --spacing-section: 1.5rem;
+  --success: #15803d;
+  --error: #b91c1c;
+  --info: #0369a1;
+  --touch-target-min: 44px;
 }
 
 @theme inline {
@@ -28,6 +32,9 @@
     --border: #27272a;
     --card: #18181b;
     --accent: #fafafa;
+    --success: #22c55e;
+    --error: #ef4444;
+    --info: #0ea5e9;
   }
 }
 
