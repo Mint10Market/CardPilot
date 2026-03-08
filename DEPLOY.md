@@ -134,6 +134,24 @@ Use the URL it prints (e.g. `https://card-pilot.vercel.app`).
 
 ---
 
+## Deployments show "Error" (build failing)
+
+If Vercel lists deployments as **Error** (red), the build is failing. Deploys are triggered; the build step is what fails.
+
+1. **Get the exact error**
+   - In Vercel → **Deployments** → click one of the failed deployments (e.g. the latest red one).
+   - Open the **Building** step (or **Logs**) and scroll to the bottom. You’ll see the failing command (e.g. `npm run build` / `next build`) and the error (e.g. TypeScript, missing file, or "middleware" deprecation).
+
+2. **Common causes and fixes**
+   - **TypeScript errors** (e.g. `Property 'finally' does not exist`, or type mismatches in collection/settings): ensure the branch that’s on `main` includes the TS fixes (Promise `.then` instead of `.finally`, `Partial<Settings>`, date serialization for Expense/Transaction edit pages).
+   - **"middleware" deprecated / proxy**: Next.js 16 expects `src/proxy.ts` (export `proxy`), not `src/middleware.ts`. Ensure the repo has `proxy.ts` and no `middleware.ts` on the deployed branch.
+   - **Missing env**: If the log says a secret or `DATABASE_URL` is missing, add it under Vercel → Project → **Settings → Environment Variables** for Production (and Preview if you use it).
+
+3. **After fixing**
+   - Commit and push to `main` (or merge a PR into `main`). Vercel will create a new deployment; if the fix is correct, that deployment should turn **Ready** and become the new Production.
+
+---
+
 ## Vercel MCP in Cursor
 
 Vercel MCP is configured in `.cursor/mcp.json`. After adding it, Cursor may show “Needs login” for Vercel; use that to authorize. You can then use Vercel MCP to list projects, inspect deployments, and view logs. Creating new deployments is still done via CLI or Git push as above.
