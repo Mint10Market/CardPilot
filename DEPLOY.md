@@ -115,10 +115,7 @@ Use the URL it prints (e.g. `https://card-pilot.vercel.app`).
 
 **Make sure PRs and main redeploy Vercel**
 
-- With the project **connected to GitHub** (imported in step 2), Vercel automatically:
-  - **Production:** redeploys when you push (or merge a PR) to the **Production Branch** (e.g. `main`).
-  - **Preview:** creates a preview deployment for every push to any branch, including branches that have an open PR.
-- To confirm: Vercel → your project → **Settings → Git** → check **Production Branch** (e.g. `main`) and that **Vercel for GitHub** is connected. No code change is required; re-deploys are triggered by Git events.
+- With the project **connected to GitHub** (imported in step 2), Vercel automatically redeploys on push. If pushes to `main` don’t create a deployment: Vercel → your project → **Settings → Git** → connect the repo (e.g. **Mint10Market/CardPilot**) and set **Production Branch** to `main`.
 
 ---
 
@@ -131,25 +128,6 @@ Use the URL it prints (e.g. `https://card-pilot.vercel.app`).
    `https://card-pilot.vercel.app/api/auth/ebay/callback`
 3. (Optional) Run DB migrations if needed:  
    `DATABASE_URL=your_supabase_url npm run db:push`
-
----
-
-## No deployment when pushing to main (Git not triggering Vercel)
-
-If pushes to `main` do not create a new Vercel deployment, the project may not be connected to GitHub or the connection is broken. Use **GitHub Actions** to deploy instead:
-
-1. **One-time: add GitHub secrets**
-   - GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
-   - Add:
-     - **VERCEL_TOKEN** — [vercel.com/account/tokens](https://vercel.com/account/tokens) → Create → copy.
-     - **VERCEL_ORG_ID** — Vercel Dashboard → your **Team/Account** → Settings → copy **Team ID** (or your user ID). Or run `npx vercel link` locally and open `.vercel/project.json`; use the `orgId` value.
-     - **VERCEL_PROJECT_ID** — Vercel → **card-pilot** project → **Settings** → **General** → copy **Project ID**. Or from `.vercel/project.json` after `vercel link`, use the `projectId` value.
-
-2. **Deploy on every push**
-   - The workflow `.github/workflows/deploy-vercel.yml` runs on every push to `main`. After the three secrets are set, the next push (or re-run of the workflow) will build and deploy to Vercel production.
-
-3. **Optional: fix Vercel Git**
-   - In Vercel → **card-pilot** → **Settings** → **Git**: connect the repository and set **Production Branch** to `main` so Vercel also creates deployments from Git. Then you can use either Git or the GitHub Action.
 
 ---
 
