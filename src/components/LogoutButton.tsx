@@ -2,7 +2,16 @@
 
 export function LogoutButton() {
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (!res.ok) {
+        console.error("Logout failed:", res.status);
+        return;
+      }
+    } catch (e) {
+      console.error("Logout request failed:", e);
+      return;
+    }
     window.location.href = "/";
   }
   return (

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cardShows } from "@/lib/db/schema";
-import { gte, lte, and, ilike } from "drizzle-orm";
+import { gte, lte, and, or, isNull, ilike } from "drizzle-orm";
+
+/** Escape % and _ for safe use in LIKE patterns. */
+function escapeLike(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
 
 export async function GET(request: NextRequest) {
   const from = request.nextUrl.searchParams.get("from");
@@ -10,10 +15,20 @@ export async function GET(request: NextRequest) {
   const city = request.nextUrl.searchParams.get("city");
 
   const conditions = [];
-  if (from) conditions.push(gte(cardShows.startDate, new Date(from)));
-  if (to) conditions.push(lte(cardShows.startDate, new Date(to)));
-  if (state) conditions.push(ilike(cardShows.state, state));
-  if (city) conditions.push(ilike(cardShows.city, `%${city}%`));
+  // Overlap [from, to]: show must have startDate <= to and (endDate >= from or no endDate).
+  // When only from: also require startDate >= from so we don't include shows that started before the range.
+  const fromDate = from ? new Date(from) : null;
+  const toDate = to ? new Date(to) : null;
+  if (fromDate) {
+    conditions.push(
+      or(isNull(cardShows.endDate), gte(cardShows.endDate, fromDate))
+    );
+    conditions.push(gte(cardShows.startDate, fromDate));
+  }
+  if (toDate) conditions.push(lte(cardShows.startDate, toDate));
+  if (state)
+    conditions.push(ilike(cardShows.state, `%${escapeLike(state)}%`));
+  if (city) conditions.push(ilike(cardShows.city, `%${escapeLike(city)}%`));
 
   const list = conditions.length
     ? await db

@@ -10,6 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Block committed secret env files
+        run: |
+          tracked=$(git ls-files .env .env.local .env.development.local .env.test.local .env.production.local 2>/dev/null || true)
+          if [ -n "$tracked" ]; then
+            echo "::error::Secret env files must not be committed: $tracked. Remove from git and rotate all secrets. See SECURITY.md"
+            exit 1
+          fi
+          echo "No secret env files are committed."
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
