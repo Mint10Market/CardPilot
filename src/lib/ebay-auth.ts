@@ -79,6 +79,7 @@ export async function exchangeCodeForTokens(
 export async function refreshEbayAccessToken(refreshToken: string): Promise<{
   access_token: string;
   expires_in: number;
+  refresh_token?: string;
 }> {
   const clientId = process.env.EBAY_CLIENT_ID;
   const clientSecret = process.env.EBAY_CLIENT_SECRET;
@@ -101,7 +102,7 @@ export async function refreshEbayAccessToken(refreshToken: string): Promise<{
     const err = await res.text();
     throw new Error(`eBay token refresh failed: ${res.status} ${err}`);
   }
-  const data = (await res.json()) as { access_token: string; expires_in: number };
+  const data = (await res.json()) as { access_token: string; expires_in: number; refresh_token?: string };
   return data;
 }
 

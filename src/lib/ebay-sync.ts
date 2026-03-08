@@ -17,6 +17,8 @@ function getFulfillmentBase(): string {
     : EBAY_FULFILLMENT_BASE;
 }
 
+const FIVE_MINUTES_MS = 60 * 5 * 1000;
+
 export async function getValidAccessToken(userId: string): Promise<string> {
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
@@ -25,18 +27,22 @@ export async function getValidAccessToken(userId: string): Promise<string> {
   if (!user) throw new Error("User not found");
   const expiresAt = new Date(user.tokenExpiresAt).getTime();
   const now = Date.now();
-  const fiveMinutesMs = 60 * 5 * 1000;
-  if (expiresAt > now + fiveMinutesMs) return user.accessToken;
+  const isValidExpiry = Number.isFinite(expiresAt) && expiresAt > now + FIVE_MINUTES_MS;
+  if (isValidExpiry) return user.accessToken;
   const refreshed = await refreshEbayAccessToken(user.refreshToken);
   const newExpiresAt = new Date(Date.now() + refreshed.expires_in * 1000);
-  await db
-    .update(users)
-    .set({
-      accessToken: refreshed.access_token,
-      tokenExpiresAt: newExpiresAt,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, userId));
+  const updatePayload: {
+    accessToken: string;
+    tokenExpiresAt: Date;
+    updatedAt: Date;
+    refreshToken?: string;
+  } = {
+    accessToken: refreshed.access_token,
+    tokenExpiresAt: newExpiresAt,
+    updatedAt: new Date(),
+  };
+  if (refreshed.refresh_token) updatePayload.refreshToken = refreshed.refresh_token;
+  await db.update(users).set(updatePayload).where(eq(users.id, userId));
   return refreshed.access_token;
 }
 
@@ -60,9 +66,12 @@ type OrderSearchResponse = {
   total?: number;
 };
 
+const MAX_DAYS_BACK = 730; // eBay allows up to 2 years
+
 export async function syncOrdersForUser(userId: string, options?: { daysBack?: number }): Promise<{ count: number }> {
   const accessToken = await getValidAccessToken(userId);
-  const daysBack = options?.daysBack ?? 90;
+  const raw = options?.daysBack ?? 90;
+  const daysBack = Math.min(MAX_DAYS_BACK, Math.max(1, Number.isFinite(raw) ? raw : 90));
   const from = new Date();
   from.setDate(from.getDate() - daysBack);
   const filter = `creationdate:[${from.toISOString()}..]`;
