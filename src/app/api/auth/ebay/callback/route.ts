@@ -7,8 +7,8 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-const REDIRECT_URI = process.env.EBAY_REDIRECT_URI!;
-const baseUrl = () => process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const baseUrl = (request: NextRequest) =>
+  process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin || "http://localhost:3000";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -16,13 +16,14 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state");
   const cookieStore = await cookies();
   const savedState = cookieStore.get("ebay_oauth_state")?.value;
-  const url = baseUrl();
+  const url = baseUrl(request);
+  const redirectUri = `${request.nextUrl.origin}/api/auth/ebay/callback`;
 
   if (!code) return NextResponse.redirect(`${url}/?error=missing_code`);
   if (state !== savedState) return NextResponse.redirect(`${url}/?error=invalid_state`);
 
   try {
-    const tokens = await exchangeCodeForTokens(code, REDIRECT_URI);
+    const tokens = await exchangeCodeForTokens(code, redirectUri);
     const ebayUser = await getEbayUser(tokens.access_token);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 

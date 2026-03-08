@@ -23,15 +23,15 @@ function isSandbox() {
   return process.env.EBAY_ENVIRONMENT === "sandbox";
 }
 
-export function getEbayAuthUrl(state?: string): string {
+export function getEbayAuthUrl(state?: string, redirectUri?: string): string {
   const clientId = process.env.EBAY_CLIENT_ID;
-  const redirectUri = process.env.EBAY_REDIRECT_URI;
-  if (!clientId || !redirectUri) throw new Error("EBAY_CLIENT_ID and EBAY_REDIRECT_URI must be set");
+  const uri = redirectUri ?? process.env.EBAY_REDIRECT_URI;
+  if (!clientId || !uri) throw new Error("EBAY_CLIENT_ID and redirect URI must be set");
   const base = isSandbox() ? EBAY_SANDBOX_AUTH : EBAY_PROD_AUTH;
   const params = new URLSearchParams({
     client_id: clientId,
     response_type: "code",
-    redirect_uri: redirectUri,
+    redirect_uri: uri,
     scope: DEFAULT_SCOPES,
     ...(state && { state }),
   });
