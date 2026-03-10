@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
     process.env.EBAY_REDIRECT_URI ||
     `${request.nextUrl.origin}/api/auth/ebay/callback`;
 
-  if (!code) return NextResponse.redirect(`${url}/?error=missing_code`);
+  // No code: likely a direct hit (e.g. eBay Developer Portal "Test redirect URI") — send to app home without error.
+  if (!code) return NextResponse.redirect(`${url}/`);
   if (state !== savedState) return NextResponse.redirect(`${url}/?error=invalid_state`);
 
   try {
