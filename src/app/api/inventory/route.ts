@@ -34,6 +34,10 @@ export async function POST(request: Request) {
     if (!body.title?.trim()) {
       return NextResponse.json({ error: "title required" }, { status: 400 });
     }
+    const priceNum = Number(body.price ?? 0);
+    if (Number.isNaN(priceNum) || priceNum < 0) {
+      return NextResponse.json({ error: "price must be a valid non-negative number" }, { status: 400 });
+    }
     const [created] = await db
       .insert(inventoryItems)
       .values({
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
         title: body.title.trim(),
         sku: body.sku?.trim() ?? null,
         quantity: Math.max(0, Number(body.quantity) || 0),
-        price: String(body.price ?? 0),
+        price: String(priceNum),
         condition: body.condition?.trim() ?? null,
         category: body.category?.trim() ?? null,
         source: "manual",

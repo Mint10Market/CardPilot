@@ -20,19 +20,23 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    const amountNum = Number(body.amount);
+    if (Number.isNaN(amountNum) || amountNum < 0) {
+      return NextResponse.json({ error: "amount must be a valid non-negative number" }, { status: 400 });
+    }
     const [created] = await db
       .insert(manualSales)
       .values({
         userId: user.id,
         saleDate: new Date(body.saleDate),
         customerId: body.customerId || null,
-        amount: String(body.amount),
+        amount: String(amountNum),
         paymentMethod: body.paymentMethod?.trim() || null,
         notes: body.notes?.trim() || null,
         lineItems: body.lineItems.map((li) => ({
           title: li.title,
           quantity: li.quantity ?? 1,
-          price: String(li.price ?? 0),
+          price: String(Number(li.price ?? 0)),
           inventoryItemId: li.inventoryItemId,
         })),
       })
