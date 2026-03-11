@@ -48,6 +48,14 @@ export async function getValidAccessToken(userId: string): Promise<string> {
 
 // eBay Fulfillment API: Order uses pricingSummary (PricingSummary) and lineItems with lineItemCost
 type Amount = { value?: string; currency?: string };
+type EbayLineItem = {
+  title?: string;
+  quantity?: number;
+  sku?: string;
+  baseUnitPrice?: { value?: string };
+  lineItemCost?: Amount;
+  discountedLineItemCost?: Amount;
+};
 type EbayOrder = {
   orderId?: string;
   creationDate?: string;
@@ -61,15 +69,7 @@ type EbayOrder = {
   };
   paymentSummary?: { payments?: Array<{ amount?: Amount }> };
   orderPaymentSummary?: { total?: string; payments?: Array<{ amount?: Amount }> };
-  lineItems?: Array<{
-    title?: string;
-    quantity?: number;
-    sku?: string;
-    baseUnitPrice?: { value?: string };
-    /** Line total (unit × qty) before discounts - use this for correct item pricing */
-    lineItemCost?: Amount;
-    discountedLineItemCost?: Amount;
-  }>;
+  lineItems?: EbayLineItem[];
 };
 
 function amountValue(a: Amount | string | undefined): string {
@@ -96,19 +96,17 @@ function getOrderTotal(order: EbayOrder): { value: string; currency: string } {
 }
 
 /** Unit price for a line item: from lineItemCost (total) / qty, or discountedLineItemCost, or baseUnitPrice */
-function getLineItemUnitPrice(
-  li: EbayOrder["lineItems"] extends readonly (infer L)[] ? L : never
-): string {
-  const qty = Math.max(1, Number(li?.quantity) || 1);
+function getLineItemUnitPrice(li: EbayLineItem): string {
+  const qty = Math.max(1, Number(li.quantity) || 1);
   const lineTotal =
-    amountValue(li?.discountedLineItemCost) ||
-    amountValue(li?.lineItemCost) ||
+    amountValue(li.discountedLineItemCost) ||
+    amountValue(li.lineItemCost) ||
     "";
   if (lineTotal && Number(lineTotal) >= 0) {
     const unit = Number(lineTotal) / qty;
     return String(unit.toFixed(2));
   }
-  return (li as { baseUnitPrice?: { value?: string } })?.baseUnitPrice?.value ?? "0";
+  return li.baseUnitPrice?.value ?? "0";
 }
 
 type OrderSearchResponse = {
