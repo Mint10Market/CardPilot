@@ -19,7 +19,7 @@ const MESSAGES: Record<string, { title: string; body: string }> = {
   },
 };
 
-export function AuthErrorBanner({ error }: { error: string }) {
+export function AuthErrorBanner({ error, detail }: { error: string; detail?: string }) {
   const msg = MESSAGES[error] ?? {
     title: "Something went wrong",
     body: "Try again or check the app configuration.",
@@ -32,6 +32,17 @@ export function AuthErrorBanner({ error }: { error: string }) {
     >
       <p className="font-medium text-amber-800 dark:text-amber-200">{msg.title}</p>
       <p className="mt-1 text-amber-700 dark:text-amber-300">{msg.body}</p>
+      {detail ? (
+        <p className="mt-2 font-mono text-xs text-amber-600 dark:text-amber-400 break-all">
+          {(() => {
+            try {
+              return decodeURIComponent(detail);
+            } catch {
+              return detail;
+            }
+          })()}
+        </p>
+      ) : null}
     </div>
   );
 }

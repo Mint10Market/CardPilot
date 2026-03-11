@@ -5,10 +5,10 @@ import { AuthErrorBanner } from "./auth-error-banner";
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; message?: string }>;
 }) {
   const user = await getCurrentUser();
-  const { error } = await searchParams;
+  const { error, message } = await searchParams;
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-6">
@@ -19,7 +19,7 @@ export default async function HomePage({
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8">
           by Mint 10 Market
         </p>
-        {error ? <AuthErrorBanner error={error} /> : null}
+        {error ? <AuthErrorBanner error={error} detail={message} /> : null}
         <p className="text-zinc-600 dark:text-zinc-300 mb-8">
           Your all-in-one CRM, inventory, sales, and card show tracker for TCG and sports card sellers.
         </p>

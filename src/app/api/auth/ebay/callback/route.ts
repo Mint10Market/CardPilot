@@ -17,10 +17,8 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const savedState = cookieStore.get("ebay_oauth_state")?.value;
   const url = baseUrl(request);
-  // Must match the redirect_uri sent to eBay (use env if set so it matches registered URI).
-  const redirectUri =
-    process.env.EBAY_REDIRECT_URI ||
-    `${request.nextUrl.origin}/api/auth/ebay/callback`;
+  // Use the actual callback URL from the request so token exchange redirect_uri matches exactly what eBay used.
+  const redirectUri = `${request.nextUrl.origin}${request.nextUrl.pathname}`;
 
   // No code: likely a direct hit (e.g. eBay Developer Portal "Test redirect URI") — send to app home without error.
   if (!code) return NextResponse.redirect(`${url}/`);
@@ -81,6 +79,9 @@ export async function GET(request: NextRequest) {
     const err = e instanceof Error ? e : new Error(String(e));
     logger.error("eBay callback error: %s", err.message);
     if (err.stack) logger.error("%s", err.stack);
-    return NextResponse.redirect(`${url}/?error=auth_failed`);
+    const cause = err.cause instanceof Error ? err.cause.message : err.cause != null ? String(err.cause) : null;
+    if (cause) logger.error("eBay callback error cause: %s", cause);
+    const msg = encodeURIComponent(err.message.slice(0, 200));
+    return NextResponse.redirect(`${url}/?error=auth_failed&message=${msg}`);
   }
 }
