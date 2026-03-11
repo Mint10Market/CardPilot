@@ -33,8 +33,10 @@ yarn-error.log*
 # env files — never commit .env.local or files with real secrets
 .env
 .env.local
-.env*
 .env*.local
+.env*
+# Track .env.example as a template (no secrets)
+!.env.example
 
 # vercel
 .vercel
