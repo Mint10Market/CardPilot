@@ -3,11 +3,29 @@ import postgres from "postgres";
 import * as schema from "./schema";
 
 function getConnectionString(): string {
-  // Prefer full URL (local .env.local, Vercel env, or Supabase integration)
-  const url =
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.SUPABASE_DB_URL;
+  const candidates = [
+    process.env.DATABASE_URL,
+    process.env.POSTGRES_URL,
+    process.env.SUPABASE_DB_URL,
+  ].filter(Boolean) as string[];
+
+  const isDirectSupabase = (u: string) =>
+    /@db\.[a-z0-9]+\.supabase\.co(?:[:\/]|$)/i.test(u);
+  const isPooler = (u: string) =>
+    u.includes("pooler.supabase.com") || /:6543[/]?/.test(u);
+
+  // On Vercel, direct Supabase host (db.xxx.supabase.co) often fails with ENOTFOUND. Prefer pooler URL.
+  if (process.env.VERCEL && candidates.length > 0) {
+    const pooler = candidates.find(isPooler);
+    if (pooler) return pooler;
+    const notDirect = candidates.find((u) => !isDirectSupabase(u));
+    if (notDirect) return notDirect;
+    throw new Error(
+      "On Vercel, Supabase direct host (db.*.supabase.co) is not reachable. Set DATABASE_URL or SUPABASE_DB_URL to the Shared Pooler URI from Supabase Connect panel (IPv4 COMPATIBLE, host like aws-0-*.pooler.supabase.com:6543)."
+    );
+  }
+
+  const url = candidates[0];
   if (url) return url;
 
   // Vercel + Supabase integration: build from POSTGRES_* or SUPABASE_DB_*
