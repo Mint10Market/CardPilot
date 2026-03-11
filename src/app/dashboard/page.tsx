@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-server";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
+import { Card } from "@/components/ui/Card";
+import { LinkButton } from "@/components/ui/Button";
 import { SyncButton } from "./SyncButton";
 import { db } from "@/lib/db";
 import { cardTransactions, expenses } from "@/lib/db/schema";
@@ -73,77 +75,67 @@ export default async function DashboardPage() {
     expensesYtd += Number(r[0]?.total ?? 0);
   }
   const trueProfitYtd = salesYtd - cogsYtd - expensesYtd;
+  const isEmpty = inventoryValue === 0 && salesYtd === 0 && trueProfitYtd === 0;
 
   return (
     <AppShell title="Dashboard">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-        <p className="text-[var(--muted)]">
-          Connected with eBay. Your sales, inventory, and customers sync here.
-        </p>
-        <div className="flex items-center gap-3">
-          <SyncButton />
-          <span className="text-sm text-[var(--muted)]">
-            {user.ebayUsername || user.ebayUserId}
-          </span>
-        </div>
-      </div>
-      <section className="mb-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4">
-        <h2 className="text-sm font-medium text-[var(--muted)] mb-3">Collection ({year})</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p className="text-xs text-[var(--muted)]">Inventory value</p>
-            <p className="text-lg font-semibold">{fmt(inventoryValue)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-[var(--muted)]">Sales YTD</p>
-            <p className="text-lg font-semibold">{fmt(salesYtd)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-[var(--muted)]">True profit YTD</p>
-            <p className="text-lg font-semibold">{fmt(trueProfitYtd)}</p>
-          </div>
-          <div>
-            <Link
-              href="/collection"
-              className="text-sm text-[var(--foreground)] underline"
-            >
-              View Collection →
-            </Link>
-          </div>
-        </div>
-      </section>
-      <nav className="flex flex-wrap gap-3" aria-label="Dashboard sections">
-          <Link
-            href="/sales"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--success)] bg-[var(--success)]/10 px-3 py-1.5 text-sm font-medium text-[var(--success)]"
+            aria-label="eBay connection status"
           >
-            Sales & Profit
-          </Link>
+            <span className="h-2 w-2 rounded-full bg-[var(--success)]" aria-hidden />
+            Connected with eBay
+          </span>
+          <SyncButton />
+        </div>
+        <span className="text-sm text-[var(--muted)]">
+          {user.ebayUsername || user.ebayUserId}
+        </span>
+      </div>
+
+      {isEmpty && (
+        <Card className="mb-6 p-6">
+          <p className="text-[var(--foreground)] mb-3">
+            Get started by syncing your eBay sales or importing your collection.
+          </p>
+          <p className="text-sm text-[var(--muted)] mb-3">
+            Use &quot;Sync from eBay&quot; above, or add your collection from a spreadsheet.
+          </p>
+          <LinkButton href="/collection" variant="secondary">
+            Import collection
+          </LinkButton>
+        </Card>
+      )}
+
+      <Card className="mb-6">
+        <h2 className="text-sm font-medium text-[var(--muted)] uppercase tracking-wider mb-4">
+          Collection ({year})
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-xs text-[var(--muted)] uppercase tracking-wider">Inventory value</p>
+            <p className="text-lg font-semibold text-[var(--foreground)]">{fmt(inventoryValue)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-[var(--muted)] uppercase tracking-wider">Sales YTD</p>
+            <p className="text-lg font-semibold text-[var(--foreground)]">{fmt(salesYtd)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-[var(--muted)] uppercase tracking-wider">True profit YTD</p>
+            <p className="text-lg font-semibold text-[var(--foreground)]">{fmt(trueProfitYtd)}</p>
+          </div>
+        </div>
+        <footer className="mt-4 pt-4 border-t border-[var(--border)] flex justify-end">
           <Link
             href="/collection"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
+            className="text-sm font-medium text-[var(--foreground)] hover:text-[var(--muted)] transition-colors"
           >
-            Collection
+            View Collection →
           </Link>
-          <Link
-            href="/inventory"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
-          >
-            Inventory
-          </Link>
-          <Link
-            href="/customers"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
-          >
-            Customers
-          </Link>
-          <Link
-            href="/shows"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
-          >
-            Card Shows
-          </Link>
-        </nav>
+        </footer>
+      </Card>
     </AppShell>
   );
 }

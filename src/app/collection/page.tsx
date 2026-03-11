@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-server";
-import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
+import { Card } from "@/components/ui/Card";
+import { LinkButton } from "@/components/ui/Button";
 import { CollectionImportForm } from "./CollectionImportForm";
 
 export default async function CollectionPage() {
@@ -11,43 +12,28 @@ export default async function CollectionPage() {
   return (
     <AppShell title="Collection">
       <div className="space-y-8">
-        <section>
+        <Card>
           <h2 className="text-lg font-medium text-[var(--foreground)] mb-2">
             Import from spreadsheet
           </h2>
           <CollectionImportForm />
-        </section>
+        </Card>
         <nav className="flex flex-wrap gap-3" aria-label="Collection sections">
-          <Link
-            href="/collection/transactions"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
-          >
+          <LinkButton href="/collection/transactions" variant="secondary">
             Card Transactions
-          </Link>
-          <Link
-            href="/collection/expenses"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
-          >
+          </LinkButton>
+          <LinkButton href="/collection/expenses" variant="secondary">
             Expenses
-          </Link>
-          <Link
-            href="/collection/summary"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
-          >
+          </LinkButton>
+          <LinkButton href="/collection/summary" variant="secondary">
             Summary & Income
-          </Link>
-          <Link
-            href="/collection/sports"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
-          >
+          </LinkButton>
+          <LinkButton href="/collection/sports" variant="secondary">
             Sport breakdowns
-          </Link>
-          <Link
-            href="/collection/settings"
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-[var(--foreground)] hover:opacity-90 min-h-[44px] flex items-center justify-center"
-          >
+          </LinkButton>
+          <LinkButton href="/collection/settings" variant="secondary">
             Settings
-          </Link>
+          </LinkButton>
         </nav>
       </div>
     </AppShell>
