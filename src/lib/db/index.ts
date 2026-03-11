@@ -3,10 +3,11 @@ import postgres from "postgres";
 import * as schema from "./schema";
 
 function getConnectionString(): string {
-  // Prefer full URL (local .env.local or manual Vercel env)
+  // Prefer full URL (local .env.local, Vercel env, or Supabase integration)
   const url =
     process.env.DATABASE_URL ||
-    process.env.POSTGRES_URL;
+    process.env.POSTGRES_URL ||
+    process.env.SUPABASE_DB_URL;
   if (url) return url;
 
   // Vercel + Supabase integration: build from POSTGRES_* or SUPABASE_DB_*

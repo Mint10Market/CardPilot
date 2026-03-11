@@ -143,6 +143,7 @@ If Vercel lists deployments as **Error** (red), the build is failing. Deploys ar
    - **TypeScript errors** (e.g. `Property 'finally' does not exist`, or type mismatches in collection/settings): ensure the branch that’s on `main` includes the TS fixes (Promise `.then` instead of `.finally`, `Partial<Settings>`, date serialization for Expense/Transaction edit pages).
    - **"middleware" deprecated / proxy**: Next.js 16 expects `src/proxy.ts` (export `proxy`), not `src/middleware.ts`. Ensure the repo has `proxy.ts` and no `middleware.ts` on the deployed branch.
    - **Missing env**: If the log says a secret or `DATABASE_URL` is missing, add it under Vercel → Project → **Settings → Environment Variables** for Production (and Preview if you use it).
+   - **Database "Failed query" / "getaddrinfo ENOTFOUND db.xxx.supabase.co"**: Vercel cannot reach Supabase’s direct host. Use the **connection pooler** URL instead. In Supabase: open the **Connect** panel (click **Connect** on the project dashboard, or use the link in Database docs). Choose **Transaction** mode to get the pooler URI. Copy that URI (host like `aws-0-<region>.pooler.supabase.com`, port **6543**; pooler is included in Supabase, no extra cost). In Vercel → **Settings → Environment Variables**, set **`DATABASE_URL`** (or **`POSTGRES_URL`**) to that pooler URI for Production. Redeploy.
 
 3. **After fixing**
    - Commit and push to `main` (or merge a PR into `main`). Vercel will create a new deployment; if the fix is correct, that deployment should turn **Ready** and become the new Production.

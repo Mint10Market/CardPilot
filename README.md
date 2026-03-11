@@ -70,13 +70,13 @@ Open [http://localhost:3000](http://localhost:3000) (local) or [https://card-pil
 
 ## Card shows data
 
-To load seed shows, call:
+To load seed shows, call (requires **CRON_SECRET** in env; send `Authorization: Bearer <CRON_SECRET>`):
 
 ```bash
-curl -X POST http://localhost:3000/api/shows/refresh
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/shows/refresh
 ```
 
-In production: `curl -X POST https://card-pilot.vercel.app/api/shows/refresh`. Run periodically (cron) or add more source adapters in `src/lib/show-sources/`.
+In production use the same header with your `CRON_SECRET`. Run periodically (cron) or add more source adapters in `src/lib/show-sources/`.
 
 ## Scheduled eBay sync (Vercel Cron)
 
