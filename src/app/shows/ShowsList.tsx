@@ -20,8 +20,11 @@ type Show = {
   hotColdRating: string | null;
 };
 
-function fetchShows(params: URLSearchParams): Promise<Show[]> {
-  return fetch(`/api/shows?${params}`).then((r) => r.json());
+async function fetchShows(params: URLSearchParams): Promise<Show[]> {
+  const r = await fetch(`/api/shows?${params}`);
+  if (!r.ok) throw new Error(r.status === 401 ? "Unauthorized" : `Shows request failed: ${r.status}`);
+  const data = await r.json();
+  return Array.isArray(data) ? data : [];
 }
 
 export function ShowsList() {
