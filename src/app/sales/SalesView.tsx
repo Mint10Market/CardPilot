@@ -4,6 +4,21 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 
 type LineItem = { title?: string; quantity?: number; price?: string; sku?: string };
+/** eBay raw order: pricingSummary (what buyer paid) and lineItems with lineItemCost */
+type EbayRawPayload = {
+  pricingSummary?: {
+    priceSubtotal?: { value?: string };
+    deliveryCost?: { value?: string };
+    tax?: { value?: string };
+    total?: { value?: string };
+  };
+  lineItems?: Array<{
+    title?: string;
+    quantity?: number;
+    lineItemCost?: { value?: string };
+    discountedLineItemCost?: { value?: string };
+  }>;
+};
 type OrderRow = {
   id: string;
   orderDate?: string;
@@ -16,6 +31,7 @@ type OrderRow = {
   ebayOrderId?: string | null;
   currency?: string | null;
   lineItems?: LineItem[];
+  rawPayload?: EbayRawPayload | null;
 };
 type ManualRow = {
   id: string;
@@ -43,13 +59,32 @@ function TransactionBreakdownModal({
 }) {
   if (row.type === "eBay") {
     const o = row.record;
-    const lineItems = (o.lineItems ?? []) as LineItem[];
-    const subtotal = lineItems.reduce(
-      (sum, li) => sum + (Number(li.price) || 0) * (Number(li.quantity) || 1),
-      0
-    );
-    const total = parseFloat(String(o.totalAmount ?? 0));
-    const diff = total - subtotal;
+    const raw = o.rawPayload;
+    // Use eBay API breakdown when available (matches "What your buyer paid")
+    const priceSubtotal = raw?.pricingSummary?.priceSubtotal?.value ?? "";
+    const deliveryCost = raw?.pricingSummary?.deliveryCost?.value ?? "";
+    const tax = raw?.pricingSummary?.tax?.value ?? "";
+    const orderTotalRaw = raw?.pricingSummary?.total?.value ?? "";
+    const orderTotal = orderTotalRaw ? parseFloat(orderTotalRaw) : parseFloat(String(o.totalAmount ?? 0));
+
+    // Line items: prefer raw lineItemCost so item price is correct
+    const rawLineItems = raw?.lineItems ?? [];
+    const hasRawLineItems = rawLineItems.length > 0 && rawLineItems.some((li) => li.lineItemCost?.value ?? li.discountedLineItemCost?.value);
+    const lineItemsForTable = hasRawLineItems
+      ? rawLineItems.map((li) => {
+          const qty = Math.max(1, li.quantity ?? 1);
+          const lineTotalVal = li.discountedLineItemCost?.value ?? li.lineItemCost?.value ?? "0";
+          const lineTotal = parseFloat(lineTotalVal) || 0;
+          const unit = qty > 0 ? lineTotal / qty : 0;
+          return { title: li.title, quantity: qty, unit, lineTotal };
+        })
+      : (o.lineItems ?? []).map((li) => {
+          const qty = Number(li.quantity) || 1;
+          const unit = Number(li.price) || 0;
+          return { title: li.title, quantity: qty, unit, lineTotal: qty * unit };
+        });
+
+    const subtotalFromRaw = priceSubtotal ? parseFloat(priceSubtotal) : lineItemsForTable.reduce((s, li) => s + li.lineTotal, 0);
 
     return (
       <div
@@ -96,7 +131,7 @@ function TransactionBreakdownModal({
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-[var(--foreground)] mb-2">Line items</p>
+              <p className="text-sm font-medium text-[var(--foreground)] mb-2">What your buyer paid</p>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-[var(--muted)]">
@@ -107,39 +142,43 @@ function TransactionBreakdownModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {lineItems.map((li, i) => {
-                    const qty = Number(li.quantity) || 1;
-                    const unit = Number(li.price) || 0;
-                    const lineTotal = qty * unit;
-                    return (
-                      <tr key={i} className="border-b border-[var(--border)]">
-                        <td className="py-2 text-[var(--foreground)] truncate max-w-[180px]" title={li.title}>
-                          {li.title || "—"}
-                        </td>
-                        <td className="py-2 text-right">{qty}</td>
-                        <td className="py-2 text-right">${fmtMoney(unit)}</td>
-                        <td className="py-2 text-right">${fmtMoney(lineTotal)}</td>
-                      </tr>
-                    );
-                  })}
+                  {lineItemsForTable.map((li, i) => (
+                    <tr key={i} className="border-b border-[var(--border)]">
+                      <td className="py-2 text-[var(--foreground)] truncate max-w-[180px]" title={li.title}>
+                        {li.title || "—"}
+                      </td>
+                      <td className="py-2 text-right">{li.quantity}</td>
+                      <td className="py-2 text-right">${fmtMoney(li.unit)}</td>
+                      <td className="py-2 text-right">${fmtMoney(li.lineTotal)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
             <div className="border-t border-[var(--border)] pt-3 space-y-1 text-sm">
               <div className="flex justify-between text-[var(--muted)]">
-                <span>Subtotal (items)</span>
-                <span>${fmtMoney(subtotal)}</span>
+                <span>Subtotal</span>
+                <span>${fmtMoney(subtotalFromRaw)}</span>
               </div>
-              {Math.abs(diff) > 0.005 && (
+              {deliveryCost && parseFloat(deliveryCost) !== 0 && (
                 <div className="flex justify-between text-[var(--muted)]">
-                  <span>Shipping / tax / fees</span>
-                  <span>{diff >= 0 ? "+" : ""}${fmtMoney(diff)}</span>
+                  <span>Shipping</span>
+                  <span>${fmtMoney(deliveryCost)}</span>
+                </div>
+              )}
+              {tax && parseFloat(tax) !== 0 && (
+                <div className="flex justify-between text-[var(--muted)]">
+                  <span>Sales tax</span>
+                  <span>${fmtMoney(tax)}</span>
                 </div>
               )}
               <div className="flex justify-between font-semibold text-[var(--foreground)] pt-1">
                 <span>Order total</span>
-                <span>${fmtMoney(total)} {o.currency && o.currency !== "USD" ? o.currency : ""}</span>
+                <span>${fmtMoney(orderTotal)} {o.currency && o.currency !== "USD" ? o.currency : ""}</span>
               </div>
+              <p className="text-xs text-[var(--muted)] pt-2 border-t border-[var(--border)] mt-2">
+                Profit from sale = Order total − cost of card
+              </p>
             </div>
           </div>
         </div>

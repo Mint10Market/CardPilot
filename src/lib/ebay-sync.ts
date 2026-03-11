@@ -46,35 +46,42 @@ export async function getValidAccessToken(userId: string): Promise<string> {
   return refreshed.access_token;
 }
 
-// eBay Fulfillment API: Order uses pricingSummary (PricingSummary.total = Amount) and paymentSummary (PaymentSummary)
+// eBay Fulfillment API: Order uses pricingSummary (PricingSummary) and lineItems with lineItemCost
 type Amount = { value?: string; currency?: string };
 type EbayOrder = {
   orderId?: string;
   creationDate?: string;
   orderFulfillmentStatus?: string;
   buyer?: { username?: string; buyerUserId?: string };
-  /** Actual API field: order total (Amount object) */
-  pricingSummary?: { total?: Amount | string };
-  /** Actual API field: payment details */
+  pricingSummary?: {
+    total?: Amount | string;
+    priceSubtotal?: Amount | string;
+    deliveryCost?: Amount | string;
+    tax?: Amount | string;
+  };
   paymentSummary?: { payments?: Array<{ amount?: Amount }> };
-  /** Legacy/deprecated name some docs use */
   orderPaymentSummary?: { total?: string; payments?: Array<{ amount?: Amount }> };
   lineItems?: Array<{
     title?: string;
     quantity?: number;
     sku?: string;
     baseUnitPrice?: { value?: string };
+    /** Line total (unit × qty) before discounts - use this for correct item pricing */
+    lineItemCost?: Amount;
+    discountedLineItemCost?: Amount;
   }>;
 };
 
+function amountValue(a: Amount | string | undefined): string {
+  return typeof a === "string" ? a : a?.value ?? "0";
+}
+
 function getOrderTotal(order: EbayOrder): { value: string; currency: string } {
-  const amountObj = (a: Amount | string | undefined): string =>
-    typeof a === "string" ? a : a?.value ?? "0";
   const currencyFrom = (a: Amount | string | undefined): string =>
     typeof a === "string" ? "USD" : a?.currency ?? "USD";
   const total =
     order.pricingSummary?.total != null
-      ? amountObj(order.pricingSummary.total)
+      ? amountValue(order.pricingSummary.total)
       : order.orderPaymentSummary?.total ??
         order.paymentSummary?.payments?.[0]?.amount?.value ??
         order.orderPaymentSummary?.payments?.[0]?.amount?.value ??
@@ -86,6 +93,22 @@ function getOrderTotal(order: EbayOrder): { value: string; currency: string } {
         order.orderPaymentSummary?.payments?.[0]?.amount?.currency ??
         "USD";
   return { value: total, currency };
+}
+
+/** Unit price for a line item: from lineItemCost (total) / qty, or discountedLineItemCost, or baseUnitPrice */
+function getLineItemUnitPrice(
+  li: EbayOrder["lineItems"] extends readonly (infer L)[] ? L : never
+): string {
+  const qty = Math.max(1, Number(li?.quantity) || 1);
+  const lineTotal =
+    amountValue(li?.discountedLineItemCost) ||
+    amountValue(li?.lineItemCost) ||
+    "";
+  if (lineTotal && Number(lineTotal) >= 0) {
+    const unit = Number(lineTotal) / qty;
+    return String(unit.toFixed(2));
+  }
+  return (li as { baseUnitPrice?: { value?: string } })?.baseUnitPrice?.value ?? "0";
 }
 
 type OrderSearchResponse = {
@@ -122,7 +145,13 @@ export async function syncOrdersForUser(
   const limit = 50;
 
   while (true) {
-    const url = `${base}/order?filter=${encodeURIComponent(filter)}&limit=${limit}&offset=${offset}`;
+    const params = new URLSearchParams({
+      filter,
+      limit: String(limit),
+      offset: String(offset),
+      fieldGroups: "TAX_BREAKDOWN",
+    });
+    const url = `${base}/order?${params.toString()}`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -139,7 +168,7 @@ export async function syncOrdersForUser(
         sku: li.sku,
         title: li.title ?? "",
         quantity: li.quantity ?? 1,
-        price: li.baseUnitPrice?.value ?? "0",
+        price: getLineItemUnitPrice(li),
       }));
       await db
         .insert(orders)
