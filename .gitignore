@@ -37,6 +37,8 @@ yarn-error.log*
 .env*
 # Track .env.example as a template (no secrets)
 !.env.example
+# Explicitly ignore env with secrets (do not remove)
+.env.local
 
 # vercel
 .vercel
