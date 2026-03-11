@@ -24,9 +24,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, count });
   } catch (e) {
     console.error("Refresh shows error:", e);
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Refresh failed" },
-      { status: 500 }
-    );
+    const message = e instanceof Error ? e.message : "Refresh failed";
+    const isSchemaError =
+      typeof message === "string" &&
+      (message.includes("buyer_entry_cost") ||
+        message.includes("vendor_booth_cost") ||
+        message.includes("column") ||
+        message.includes("Failed query"));
+    const error =
+      isSchemaError
+        ? "Card shows table is missing columns. Run the database migration (see DEPLOY.md)."
+        : message;
+    return NextResponse.json({ error }, { status: 500 });
   }
 }
