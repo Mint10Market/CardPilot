@@ -24,13 +24,13 @@ export default async function ShowDetailPage({
   });
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <header className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3">
+    <div className="min-h-screen bg-[var(--background)]">
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 shadow-[var(--shadow-sm)]">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/dashboard" className="font-semibold text-zinc-900 dark:text-zinc-100">
+          <Link href="/dashboard" className="font-semibold text-[var(--foreground)]">
             Card Pilot
           </Link>
-          <Link href="/shows" className="text-sm text-zinc-600 dark:text-zinc-400 hover:underline">
+          <Link href="/shows" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:underline">
             ← Card Shows
           </Link>
         </div>
@@ -39,33 +39,33 @@ export default async function ShowDetailPage({
         <div className="mb-4 flex items-center gap-3">
           {show.hotColdRating && (
             <span
-              className={`rounded px-2 py-1 text-sm font-medium ${
+              className={`rounded-[var(--radius)] px-2 py-1 text-sm font-medium ${
                 show.hotColdRating === "hot"
-                  ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                  ? "bg-[var(--error)]/15 text-[var(--error)]"
                   : show.hotColdRating === "warm"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                    : "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"
+                    ? "bg-[var(--warning)]/15 text-[var(--warning)]"
+                    : "bg-[var(--table-header)] text-[var(--muted)]"
               }`}
             >
               {show.hotColdRating}
             </span>
           )}
           {show.credibilityScore != null && show.credibilityScore > 0 && (
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-[var(--muted)]">
               Listed in {show.credibilityScore} source{show.credibilityScore !== 1 ? "s" : ""}
             </span>
           )}
         </div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
+        <h1 className="text-2xl font-semibold text-[var(--foreground)] mb-6">
           {show.name}
         </h1>
 
         <section className="space-y-4 mb-8">
           <div>
-            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+            <h2 className="text-sm font-medium text-[var(--muted)] mb-1">
               When
             </h2>
-            <p className="text-zinc-900 dark:text-zinc-100">
+            <p className="text-[var(--foreground)]">
               {new Date(show.startDate).toLocaleString(undefined, {
                 weekday: "long",
                 month: "long",
@@ -83,10 +83,10 @@ export default async function ShowDetailPage({
           </div>
           {(show.venue || show.address || show.city) && (
             <div>
-              <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              <h2 className="text-sm font-medium text-[var(--muted)] mb-1">
                 Where
               </h2>
-              <p className="text-zinc-900 dark:text-zinc-100">
+              <p className="text-[var(--foreground)]">
                 {[show.venue, show.address, [show.city, show.state].filter(Boolean).join(", ")]
                   .filter(Boolean)
                   .join(" · ")}
@@ -95,21 +95,21 @@ export default async function ShowDetailPage({
           )}
           {(show.organizerName || show.organizerEmail || show.organizerPhone) && (
             <div>
-              <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              <h2 className="text-sm font-medium text-[var(--muted)] mb-1">
                 Contact / Host
               </h2>
-              <p className="text-zinc-900 dark:text-zinc-100">
+              <p className="text-[var(--foreground)]">
                 {show.organizerName && <span>{show.organizerName}</span>}
                 {show.organizerEmail && (
                   <span className="block">
-                    <a href={`mailto:${show.organizerEmail}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                    <a href={`mailto:${show.organizerEmail}`} className="text-[var(--info)] hover:underline">
                       {show.organizerEmail}
                     </a>
                   </span>
                 )}
                 {show.organizerPhone && (
                   <span className="block">
-                    <a href={`tel:${show.organizerPhone}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                    <a href={`tel:${show.organizerPhone}`} className="text-[var(--info)] hover:underline">
                       {show.organizerPhone}
                     </a>
                   </span>
@@ -119,26 +119,26 @@ export default async function ShowDetailPage({
           )}
           {show.boothInfo && (
             <div>
-              <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              <h2 className="text-sm font-medium text-[var(--muted)] mb-1">
                 How to buy a booth
               </h2>
-              <p className="text-zinc-900 dark:text-zinc-100 whitespace-pre-wrap">
+              <p className="text-[var(--foreground)] whitespace-pre-wrap">
                 {show.boothInfo}
               </p>
             </div>
           )}
           {show.vendorCount != null && (
             <div>
-              <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              <h2 className="text-sm font-medium text-[var(--muted)] mb-1">
                 Vendors
               </h2>
-              <p className="text-zinc-900 dark:text-zinc-100">{show.vendorCount} vendors</p>
+              <p className="text-[var(--foreground)]">{show.vendorCount} vendors</p>
             </div>
           )}
         </section>
 
         {sources.length > 0 && (
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-[var(--muted)]">
             Sources: {sources.map((s) => s.sourceName).join(", ")}
           </p>
         )}

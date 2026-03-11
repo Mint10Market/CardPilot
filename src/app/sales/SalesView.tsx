@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/Card";
 
 type LineItem = { title?: string; quantity?: number; price?: string; sku?: string };
 type OrderRow = {
@@ -59,17 +60,17 @@ function TransactionBreakdownModal({
         aria-label="Transaction breakdown"
       >
         <div
-          className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
+          className="rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
               eBay order breakdown
             </h3>
             <button
               type="button"
               onClick={onClose}
-              className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+              className="rounded p-1.5 text-[var(--muted)] hover:bg-[var(--table-header)] hover:text-[var(--foreground)]"
               aria-label="Close"
             >
               ×
@@ -78,27 +79,27 @@ function TransactionBreakdownModal({
           <div className="p-4 overflow-y-auto space-y-4">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-zinc-500 dark:text-zinc-400">Order ID</span>
-                <p className="font-mono text-zinc-900 dark:text-zinc-100">{o.ebayOrderId ?? "—"}</p>
+                <span className="text-[var(--muted)]">Order ID</span>
+                <p className="font-mono text-[var(--foreground)]">{o.ebayOrderId ?? "—"}</p>
               </div>
               <div>
-                <span className="text-zinc-500 dark:text-zinc-400">Date</span>
-                <p className="text-zinc-900 dark:text-zinc-100">{row.date}</p>
+                <span className="text-[var(--muted)]">Date</span>
+                <p className="text-[var(--foreground)]">{row.date}</p>
               </div>
               <div>
-                <span className="text-zinc-500 dark:text-zinc-400">Buyer</span>
-                <p className="text-zinc-900 dark:text-zinc-100">{o.buyerUsername ?? o.buyerUserId ?? "—"}</p>
+                <span className="text-[var(--muted)]">Buyer</span>
+                <p className="text-[var(--foreground)]">{o.buyerUsername ?? o.buyerUserId ?? "—"}</p>
               </div>
               <div>
-                <span className="text-zinc-500 dark:text-zinc-400">Status</span>
-                <p className="text-zinc-900 dark:text-zinc-100">{o.status ?? "—"}</p>
+                <span className="text-[var(--muted)]">Status</span>
+                <p className="text-[var(--foreground)]">{o.status ?? "—"}</p>
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Line items</p>
+              <p className="text-sm font-medium text-[var(--foreground)] mb-2">Line items</p>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400">
+                  <tr className="border-b border-[var(--border)] text-[var(--muted)]">
                     <th className="text-left py-2 font-medium">Item</th>
                     <th className="text-right py-2 font-medium">Qty</th>
                     <th className="text-right py-2 font-medium">Unit price</th>
@@ -111,8 +112,8 @@ function TransactionBreakdownModal({
                     const unit = Number(li.price) || 0;
                     const lineTotal = qty * unit;
                     return (
-                      <tr key={i} className="border-b border-zinc-100 dark:border-zinc-800">
-                        <td className="py-2 text-zinc-900 dark:text-zinc-100 truncate max-w-[180px]" title={li.title}>
+                      <tr key={i} className="border-b border-[var(--border)]">
+                        <td className="py-2 text-[var(--foreground)] truncate max-w-[180px]" title={li.title}>
                           {li.title || "—"}
                         </td>
                         <td className="py-2 text-right">{qty}</td>
@@ -124,18 +125,18 @@ function TransactionBreakdownModal({
                 </tbody>
               </table>
             </div>
-            <div className="border-t border-zinc-200 dark:border-zinc-700 pt-3 space-y-1 text-sm">
-              <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+            <div className="border-t border-[var(--border)] pt-3 space-y-1 text-sm">
+              <div className="flex justify-between text-[var(--muted)]">
                 <span>Subtotal (items)</span>
                 <span>${fmtMoney(subtotal)}</span>
               </div>
               {Math.abs(diff) > 0.005 && (
-                <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+                <div className="flex justify-between text-[var(--muted)]">
                   <span>Shipping / tax / fees</span>
                   <span>{diff >= 0 ? "+" : ""}${fmtMoney(diff)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-semibold text-zinc-900 dark:text-zinc-100 pt-1">
+              <div className="flex justify-between font-semibold text-[var(--foreground)] pt-1">
                 <span>Order total</span>
                 <span>${fmtMoney(total)} {o.currency && o.currency !== "USD" ? o.currency : ""}</span>
               </div>
@@ -163,17 +164,17 @@ function TransactionBreakdownModal({
       aria-label="Transaction breakdown"
     >
       <div
-        className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
+        className="rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+        <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-[var(--foreground)]">
             Manual sale breakdown
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+            className="rounded p-1.5 text-[var(--muted)] hover:bg-[var(--table-header)] hover:text-[var(--foreground)]"
             aria-label="Close"
           >
             ×
@@ -182,23 +183,23 @@ function TransactionBreakdownModal({
         <div className="p-4 overflow-y-auto space-y-4">
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400">Date</span>
-              <p className="text-zinc-900 dark:text-zinc-100">{row.date}</p>
+              <span className="text-[var(--muted)]">Date</span>
+              <p className="text-[var(--foreground)]">{row.date}</p>
             </div>
             {m.notes && (
               <div className="col-span-2">
-                <span className="text-zinc-500 dark:text-zinc-400">Notes</span>
-                <p className="text-zinc-900 dark:text-zinc-100">{m.notes}</p>
+                <span className="text-[var(--muted)]">Notes</span>
+                <p className="text-[var(--foreground)]">{m.notes}</p>
               </div>
             )}
           </div>
           {lineItems.length > 0 ? (
             <>
               <div>
-                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Line items</p>
+                <p className="text-sm font-medium text-[var(--foreground)] mb-2">Line items</p>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400">
+                    <tr className="border-b border-[var(--border)] text-[var(--muted)]">
                       <th className="text-left py-2 font-medium">Item</th>
                       <th className="text-right py-2 font-medium">Qty</th>
                       <th className="text-right py-2 font-medium">Unit price</th>
@@ -211,8 +212,8 @@ function TransactionBreakdownModal({
                       const unit = Number(li.price) || 0;
                       const lineTotal = qty * unit;
                       return (
-                        <tr key={i} className="border-b border-zinc-100 dark:border-zinc-800">
-                          <td className="py-2 text-zinc-900 dark:text-zinc-100 truncate max-w-[180px]" title={li.title}>
+                        <tr key={i} className="border-b border-[var(--border)]">
+                          <td className="py-2 text-[var(--foreground)] truncate max-w-[180px]" title={li.title}>
                             {li.title || "—"}
                           </td>
                           <td className="py-2 text-right">{qty}</td>
@@ -225,14 +226,14 @@ function TransactionBreakdownModal({
                 </table>
               </div>
               {Math.abs(calculatedTotal - total) > 0.005 && (
-                <div className="flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
+                <div className="flex justify-between text-sm text-[var(--muted)]">
                   <span>Calculated from items</span>
                   <span>${fmtMoney(calculatedTotal)}</span>
                 </div>
               )}
             </>
           ) : null}
-          <div className="border-t border-zinc-200 dark:border-zinc-700 pt-3 flex justify-between font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="border-t border-[var(--border)] pt-3 flex justify-between font-semibold text-[var(--foreground)]">
             <span>Total</span>
             <span>${fmtMoney(total)}</span>
           </div>
@@ -297,7 +298,7 @@ export function SalesView() {
     return `/api/sales/export?${params}`;
   };
 
-  if (loading || !data) return <p className="text-zinc-500">Loading…</p>;
+  if (loading || !data) return <p className="text-[var(--muted)]">Loading…</p>;
 
   const all: TableRow[] = [
     ...data.orders.map((o): TableRow => ({
@@ -320,55 +321,57 @@ export function SalesView() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center">
-        <label className="text-sm text-zinc-600 dark:text-zinc-400">
+        <label className="text-sm text-[var(--muted)]">
           From
           <input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="ml-2 rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1"
+            className="ml-2 rounded border border-[var(--border)] bg-[var(--input-bg)] px-2 py-1"
           />
         </label>
-        <label className="text-sm text-zinc-600 dark:text-zinc-400">
+        <label className="text-sm text-[var(--muted)]">
           To
           <input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="ml-2 rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1"
+            className="ml-2 rounded border border-[var(--border)] bg-[var(--input-bg)] px-2 py-1"
           />
         </label>
         <button
           type="button"
           onClick={() => setShowManual(!showManual)}
-          className="rounded-lg bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 px-3 py-1.5 text-sm font-medium"
+          className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-3 py-1.5 text-sm font-medium hover:opacity-90"
         >
           Add manual sale
         </button>
         <a
           href={exportUrl()}
-          className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-1.5 text-sm"
+          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--muted)]"
         >
           Export CSV
         </a>
       </div>
       {showManual && (
-        <form onSubmit={handleManualSubmit} className="rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900 max-w-md space-y-3">
-          <input name="saleDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} className="w-full rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2" />
-          <input name="amount" type="text" placeholder="Amount" required className="w-full rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2" />
-          <input name="lineTitle" type="text" placeholder="Description" defaultValue="In-person sale" className="w-full rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2" />
-          <button type="submit" className="rounded bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 px-3 py-1.5 text-sm font-medium">Save</button>
-        </form>
+        <Card className="max-w-md">
+          <form onSubmit={handleManualSubmit} className="space-y-3">
+            <input name="saleDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
+            <input name="amount" type="text" placeholder="Amount" required className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
+            <input name="lineTitle" type="text" placeholder="Description" defaultValue="In-person sale" className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
+            <button type="submit" className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-3 py-1.5 text-sm font-medium hover:opacity-90">Save</button>
+          </form>
+        </Card>
       )}
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
-        <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+      <Card>
+        <p className="text-lg font-medium text-[var(--foreground)]">
           Total revenue (period): ${data.totalRevenue.toFixed(2)}
         </p>
-      </div>
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden bg-white dark:bg-zinc-900">
+      </Card>
+      <Card className="overflow-hidden p-0">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800">
+            <tr className="border-b border-[var(--border)] bg-[var(--table-header)]">
               <th className="p-3 font-medium">Date</th>
               <th className="p-3 font-medium">Type</th>
               <th className="p-3 font-medium">Amount</th>
@@ -378,29 +381,29 @@ export function SalesView() {
           <tbody>
             {all.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-4 text-zinc-500">No sales in this period.</td>
+                <td colSpan={4} className="p-4 text-[var(--muted)]">No sales in this period.</td>
               </tr>
             ) : (
               all.map((row) => (
-                <tr key={row.id} className="border-b border-zinc-100 dark:border-zinc-800">
+                <tr key={row.id} className="border-b border-[var(--border)]">
                   <td className="p-3">{row.date}</td>
                   <td className="p-3">{row.type}</td>
                   <td className="p-3">
                     <button
                       type="button"
                       onClick={() => setBreakdownRow(row)}
-                      className="text-left font-medium text-zinc-900 dark:text-zinc-100 underline underline-offset-2 hover:no-underline focus:outline-none focus:ring-2 focus:ring-zinc-400 rounded"
+                      className="text-left font-medium text-[var(--foreground)] underline underline-offset-2 hover:no-underline focus:outline-none focus:ring-2 focus:ring-[var(--accent)] rounded"
                     >
                       ${row.amount}
                     </button>
                   </td>
-                  <td className="p-3 text-zinc-600 dark:text-zinc-400">{"extra" in row ? row.extra ?? "—" : "—"}</td>
+                  <td className="p-3 text-[var(--muted)]">{"extra" in row ? row.extra ?? "—" : "—"}</td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
+      </Card>
       {breakdownRow && (
         <TransactionBreakdownModal
           row={breakdownRow}

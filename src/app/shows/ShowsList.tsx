@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
 
 type Show = {
   id: string;
@@ -35,7 +36,7 @@ export function ShowsList() {
       .then(() => setLoading(false), () => setLoading(false));
   }, [from, to, state]);
 
-  if (loading) return <p className="text-zinc-500">Loading…</p>;
+  if (loading) return <p className="text-[var(--muted)]">Loading…</p>;
 
   return (
     <div className="space-y-4">
@@ -45,26 +46,26 @@ export function ShowsList() {
           placeholder="From"
           value={from}
           onChange={(e) => setFrom(e.target.value)}
-          className="rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1.5 text-sm"
+          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-2 py-1.5 text-sm text-[var(--foreground)]"
         />
         <input
           type="date"
           placeholder="To"
           value={to}
           onChange={(e) => setTo(e.target.value)}
-          className="rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1.5 text-sm"
+          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-2 py-1.5 text-sm text-[var(--foreground)]"
         />
         <input
           type="text"
           placeholder="State"
           value={state}
           onChange={(e) => setState(e.target.value)}
-          className="rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-2 py-1.5 text-sm w-24"
+          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-2 py-1.5 text-sm w-24 text-[var(--foreground)]"
         />
       </div>
       <div className="grid gap-3">
         {list.length === 0 ? (
-          <p className="text-zinc-500 p-4 rounded-lg border border-zinc-200 dark:border-zinc-700">
+          <p className="text-[var(--muted)] p-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)]">
             No shows in this range. Try refreshing the show list (POST /api/shows/refresh) to load seed data.
           </p>
         ) : (
@@ -72,12 +73,12 @@ export function ShowsList() {
             <Link
               key={s.id}
               href={`/shows/${s.id}`}
-              className="block rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+              className="block rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-shadow"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h2 className="font-medium text-zinc-900 dark:text-zinc-100">{s.name}</h2>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                  <h2 className="font-medium text-[var(--foreground)]">{s.name}</h2>
+                  <p className="text-sm text-[var(--muted)] mt-1">
                     {new Date(s.startDate).toLocaleDateString(undefined, {
                       weekday: "short",
                       month: "short",
@@ -93,20 +94,20 @@ export function ShowsList() {
                     <span
                       className={`rounded px-2 py-0.5 text-xs font-medium ${
                         s.hotColdRating === "hot"
-                          ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                          ? "bg-[var(--error)]/15 text-[var(--error)]"
                           : s.hotColdRating === "warm"
-                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                            : "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"
+                            ? "bg-[var(--warning)]/15 text-[var(--warning)]"
+                            : "bg-[var(--table-header)] text-[var(--muted)]"
                       }`}
                     >
                       {s.hotColdRating}
                     </span>
                   )}
                   {s.vendorCount != null && (
-                    <span className="text-sm text-zinc-500">{s.vendorCount} vendors</span>
+                    <span className="text-sm text-[var(--muted)]">{s.vendorCount} vendors</span>
                   )}
                   {s.credibilityScore != null && s.credibilityScore > 0 && (
-                    <span className="text-xs text-zinc-400">{s.credibilityScore} sources</span>
+                    <span className="text-xs text-[var(--muted)]">{s.credibilityScore} sources</span>
                   )}
                 </div>
               </div>

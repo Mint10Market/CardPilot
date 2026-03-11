@@ -108,7 +108,7 @@ export function TransactionsList() {
         <button
           type="button"
           onClick={() => setShowAdd(!showAdd)}
-          className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium min-h-[var(--touch-target-min)]"
+          className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-4 py-2 text-sm font-medium min-h-[var(--touch-target-min)] hover:opacity-90"
         >
           {showAdd ? "Cancel" : "Add transaction"}
         </button>
@@ -156,7 +156,7 @@ export function TransactionsList() {
               <input name="notes" placeholder="Notes" className="w-full rounded border border-[var(--border)] px-3 py-2 text-sm" />
             </>
           )}
-          <button type="submit" className="rounded bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium min-h-[var(--touch-target-min)]">Save</button>
+          <button type="submit" className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-4 py-2 text-sm font-medium min-h-[var(--touch-target-min)] hover:opacity-90">Save</button>
         </form>
       )}
 
@@ -193,7 +193,7 @@ export function TransactionsList() {
                   <td className="p-3">{t.profitDollars != null ? `$${t.profitDollars}` : "—"}</td>
                   <td className="p-3">
                     <Link href={`/collection/transactions/${t.id}`} className="text-[var(--foreground)] underline mr-2">Edit</Link>
-                    <button type="button" onClick={() => handleDelete(t.id)} className="text-red-600 dark:text-red-400 underline">Delete</button>
+                    <button type="button" onClick={() => handleDelete(t.id)} className="text-[var(--error)] underline">Delete</button>
                   </td>
                 </tr>
               ))

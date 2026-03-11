@@ -5,7 +5,7 @@ type Variant = "primary" | "secondary" | "ghost";
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    "bg-[var(--accent)] text-[var(--background)] hover:opacity-90 disabled:opacity-50",
+    "bg-[var(--accent)] text-[var(--accent-foreground)] hover:opacity-90 disabled:opacity-50",
   secondary:
     "border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[var(--muted)] disabled:opacity-50",
   ghost:
@@ -34,7 +34,7 @@ export function Button({
 }
 
 const linkVariantClasses: Record<Variant, string> = {
-  primary: "bg-[var(--accent)] text-[var(--background)] hover:opacity-90",
+  primary: "bg-[var(--accent)] text-[var(--accent-foreground)] hover:opacity-90",
   secondary:
     "border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[var(--muted)]",
   ghost: "bg-transparent text-[var(--foreground)] hover:bg-[var(--card)]",

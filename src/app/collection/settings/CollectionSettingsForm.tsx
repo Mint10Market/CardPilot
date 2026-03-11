@@ -79,7 +79,7 @@ export function CollectionSettingsForm() {
       <button
         type="submit"
         disabled={saving}
-        className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium disabled:opacity-50"
+        className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-4 py-2 text-sm font-medium disabled:opacity-50 hover:opacity-90"
       >
         {saving ? "Saving…" : "Save settings"}
       </button>

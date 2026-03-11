@@ -28,12 +28,12 @@ export function AuthErrorBanner({ error, detail }: { error: string; detail?: str
   return (
     <div
       role="alert"
-      className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-left text-sm dark:border-amber-800 dark:bg-amber-950/50"
+      className="mb-6 rounded-[var(--radius)] border border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-left text-sm"
     >
-      <p className="font-medium text-amber-800 dark:text-amber-200">{msg.title}</p>
-      <p className="mt-1 text-amber-700 dark:text-amber-300">{msg.body}</p>
+      <p className="font-medium text-[var(--foreground)]">{msg.title}</p>
+      <p className="mt-1 text-[var(--muted)]">{msg.body}</p>
       {detail ? (
-        <p className="mt-2 font-mono text-xs text-amber-600 dark:text-amber-400 break-all">
+        <p className="mt-2 font-mono text-xs text-[var(--muted)] break-all">
           {(() => {
             try {
               return decodeURIComponent(detail);

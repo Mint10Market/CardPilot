@@ -47,7 +47,7 @@ export function ExpenseEditForm({ expense: e }: { expense: Expense }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-[var(--error)]">{error}</p>}
       <div>
         <label className="block text-xs text-[var(--muted)] mb-1">Name</label>
         <input name="expenseName" defaultValue={e.expenseName} required className={inputClass} />
@@ -73,7 +73,7 @@ export function ExpenseEditForm({ expense: e }: { expense: Expense }) {
       <button
         type="submit"
         disabled={saving}
-        className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium disabled:opacity-50"
+        className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-4 py-2 text-sm font-medium disabled:opacity-50 hover:opacity-90"
       >
         {saving ? "Saving…" : "Save"}
       </button>

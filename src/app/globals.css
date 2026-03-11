@@ -1,22 +1,30 @@
 @import "tailwindcss";
 
-/* Card Pilot design tokens – intuitive, easy to scan */
+/*
+ * Card Pilot design tokens – research-based palette for CRM/dashboard apps.
+ * Primary: indigo (trust, professionalism, extended-session comfort).
+ * Neutrals: cool slate greys. State: success/warning/error/info (universal).
+ */
 :root {
-  --background: #fafafa;
-  --foreground: #18181b;
-  --muted: #71717a;
-  --border: #e4e4e7;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
   --card: #ffffff;
-  --accent: #18181b;
+  --accent: #4f46e5;
+  --accent-foreground: #ffffff;
   --radius: 0.5rem;
   --spacing-page: 1rem;
   --spacing-section: 1.5rem;
   --success: #15803d;
   --error: #b91c1c;
+  --warning: #d97706;
   --info: #0369a1;
   --touch-target-min: 44px;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --input-bg: #ffffff;
+  --table-header: #f1f5f9;
 }
 
 @theme inline {
@@ -28,15 +36,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --muted: #a1a1aa;
-    --border: #27272a;
-    --card: #18181b;
-    --accent: #fafafa;
-    --success: #22c55e;
-    --error: #ef4444;
-    --info: #0ea5e9;
+    --background: #0f172a;
+    --foreground: #f8fafc;
+    --muted: #94a3b8;
+    --border: #334155;
+    --card: #1e293b;
+    --accent: #818cf8;
+    --accent-foreground: #0f172a;
+    --success: #4ade80;
+    --error: #f87171;
+    --warning: #fbbf24;
+    --info: #38bdf8;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --input-bg: #334155;
+    --table-header: #334155;
   }
 }
 

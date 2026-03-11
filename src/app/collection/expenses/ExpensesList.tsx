@@ -77,7 +77,7 @@ export function ExpensesList() {
         <button
           type="button"
           onClick={() => setShowAdd(!showAdd)}
-          className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium min-h-[44px]"
+          className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-4 py-2 text-sm font-medium min-h-[44px] hover:opacity-90"
         >
           {showAdd ? "Cancel" : "Add expense"}
         </button>
@@ -111,7 +111,7 @@ export function ExpensesList() {
           </select>
           <input name="expenseDate" type="date" required className="w-full rounded border border-[var(--border)] px-3 py-2 text-sm" />
           <input name="amount" type="number" step="0.01" required placeholder="Amount" className="w-full rounded border border-[var(--border)] px-3 py-2 text-sm" />
-          <button type="submit" className="rounded bg-[var(--foreground)] text-[var(--background)] px-3 py-1.5 text-sm font-medium">
+          <button type="submit" className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-3 py-1.5 text-sm font-medium hover:opacity-90">
             Save
           </button>
         </form>
@@ -146,7 +146,7 @@ export function ExpensesList() {
                     <Link href={`/collection/expenses/${e.id}`} className="text-[var(--foreground)] underline mr-2">
                       Edit
                     </Link>
-                    <button type="button" onClick={() => handleDelete(e.id)} className="text-red-600 dark:text-red-400 underline">
+                    <button type="button" onClick={() => handleDelete(e.id)} className="text-[var(--error)] underline">
                       Delete
                     </button>
                   </td>

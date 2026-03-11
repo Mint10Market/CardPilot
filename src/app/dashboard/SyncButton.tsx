@@ -80,7 +80,7 @@ export function SyncButton() {
           type="button"
           onClick={handleSync}
           disabled={loading}
-          className="min-h-[var(--touch-target-min)] min-w-[120px] rounded-[var(--radius)] bg-[var(--accent)] text-[var(--background)] px-4 py-2.5 text-sm font-medium disabled:opacity-50 transition-opacity hover:opacity-90"
+          className="min-h-[var(--touch-target-min)] min-w-[120px] rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-4 py-2.5 text-sm font-medium disabled:opacity-50 transition-opacity hover:opacity-90"
           aria-busy={loading}
         >
           {loading ? "Syncing…" : showRetry ? "Try again" : "Sync from eBay"}

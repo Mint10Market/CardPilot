@@ -16,10 +16,10 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body style={{ margin: 0, fontFamily: "system-ui, sans-serif", background: "#18181b", color: "#fafafa", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <body style={{ margin: 0, fontFamily: "system-ui, sans-serif", background: "#0f172a", color: "#f8fafc", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center", padding: "2rem" }}>
           <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.5rem" }}>Something went wrong</h1>
-          <p style={{ fontSize: "0.875rem", color: "#a1a1aa", marginBottom: "1rem" }}>A critical error occurred. Try again.</p>
+          <p style={{ fontSize: "0.875rem", color: "#94a3b8", marginBottom: "1rem" }}>A critical error occurred. Try again.</p>
           <button
             type="button"
             onClick={reset}
@@ -27,10 +27,10 @@ export default function GlobalError({
               padding: "0.5rem 1rem",
               fontSize: "0.875rem",
               fontWeight: 500,
-              background: "#3f3f46",
-              color: "#fafafa",
+              background: "#4f46e5",
+              color: "#fff",
               border: "none",
-              borderRadius: "0.375rem",
+              borderRadius: "0.5rem",
               cursor: "pointer",
             }}
           >

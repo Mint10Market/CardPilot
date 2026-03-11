@@ -86,7 +86,7 @@ export function CollectionImportForm() {
       <button
         type="submit"
         disabled={loading || !file}
-        className="rounded-[var(--radius)] bg-[var(--foreground)] text-[var(--background)] px-4 py-2 text-sm font-medium disabled:opacity-50 min-h-[var(--touch-target-min)]"
+        className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-4 py-2 text-sm font-medium disabled:opacity-50 min-h-[var(--touch-target-min)] hover:opacity-90"
       >
         {loading ? "Importing…" : "Import"}
       </button>
