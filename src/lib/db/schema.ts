@@ -112,6 +112,8 @@ export const cardShows = pgTable("card_shows", {
   organizerEmail: text("organizer_email"),
   organizerPhone: text("organizer_phone"),
   boothInfo: text("booth_info"), // how to buy, price, link
+  buyerEntryCost: text("buyer_entry_cost"), // e.g. "$5", "Free"
+  vendorBoothCost: text("vendor_booth_cost"), // e.g. "$150", "$100–$200"
   vendorCount: integer("vendor_count"),
   credibilityScore: integer("credibility_score"), // e.g. number of sources
   hotColdRating: text("hot_cold_rating"), // 'cold' | 'warm' | 'hot' or 1-5

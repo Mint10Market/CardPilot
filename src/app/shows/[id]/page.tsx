@@ -93,6 +93,45 @@ export default async function ShowDetailPage({
               </p>
             </div>
           )}
+          {(show.buyerEntryCost != null || show.vendorBoothCost != null) && (
+            <div>
+              <h2 className="text-sm font-medium text-[var(--muted)] mb-1">
+                Costs
+              </h2>
+              <div className="text-[var(--foreground)] space-y-1">
+                <p>Admission (buyer): {show.buyerEntryCost ?? "—"}</p>
+                <p>Vendor booth: {show.vendorBoothCost ?? "—"}</p>
+              </div>
+            </div>
+          )}
+          {(show.organizerEmail || show.organizerPhone) && (
+            <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4">
+              <h2 className="text-sm font-medium text-[var(--muted)] mb-2">
+                Book a vendor booth
+              </h2>
+              <p className="text-sm text-[var(--foreground)] mb-3">
+                Contact the organizer to reserve a table or booth.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {show.organizerEmail && (
+                  <a
+                    href={`mailto:${show.organizerEmail}`}
+                    className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1.5 text-sm text-[var(--info)] hover:underline"
+                  >
+                    Email
+                  </a>
+                )}
+                {show.organizerPhone && (
+                  <a
+                    href={`tel:${show.organizerPhone}`}
+                    className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1.5 text-sm text-[var(--info)] hover:underline"
+                  >
+                    Call
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
           {(show.organizerName || show.organizerEmail || show.organizerPhone) && (
             <div>
               <h2 className="text-sm font-medium text-[var(--muted)] mb-1">

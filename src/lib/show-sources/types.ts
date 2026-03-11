@@ -16,6 +16,8 @@ export type RawShow = {
   organizerEmail?: string | null;
   organizerPhone?: string | null;
   boothInfo?: string | null;
+  buyerEntryCost?: string | null;
+  vendorBoothCost?: string | null;
   vendorCount?: number | null;
   raw?: Record<string, unknown>;
 };

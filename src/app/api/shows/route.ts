@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/auth-server";
+import { handleApiError } from "@/lib/api-response";
 import { db } from "@/lib/db";
 import { cardShows } from "@/lib/db/schema";
 import { gte, lte, and, or, isNull, ilike } from "drizzle-orm";
@@ -9,6 +11,12 @@ function escapeLike(s: string): string {
 }
 
 export async function GET(request: NextRequest) {
+  try {
+    await requireUser();
+  } catch (e) {
+    return handleApiError(e);
+  }
+
   const from = request.nextUrl.searchParams.get("from");
   const to = request.nextUrl.searchParams.get("to");
   const state = request.nextUrl.searchParams.get("state");

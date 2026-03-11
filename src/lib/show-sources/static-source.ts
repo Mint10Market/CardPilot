@@ -18,6 +18,8 @@ const SEED_SHOWS: RawShow[] = [
     organizerName: "Dallas Card Events",
     organizerEmail: "info@dallascardevents.com",
     boothInfo: "Tables $150. Contact organizer.",
+    buyerEntryCost: "$5",
+    vendorBoothCost: "$150",
   },
   {
     externalId: "static-2",
@@ -30,6 +32,8 @@ const SEED_SHOWS: RawShow[] = [
     vendorCount: 85,
     organizerName: "Houston Card Shows",
     boothInfo: "Booths from $200. See website.",
+    buyerEntryCost: "Free",
+    vendorBoothCost: "$200+",
   },
   {
     externalId: "static-3",
@@ -42,6 +46,8 @@ const SEED_SHOWS: RawShow[] = [
     vendorCount: 45,
     organizerPhone: "(512) 555-0100",
     boothInfo: "Vendor tables $100. Limited availability.",
+    buyerEntryCost: "$3",
+    vendorBoothCost: "$100",
   },
 ];
 

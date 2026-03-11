@@ -29,6 +29,13 @@
       "when": 1772933372560,
       "tag": "0003_perpetual_elektra",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773100000000,
+      "tag": "0004_card_shows_cost_columns",
+      "breakpoints": true
     }
   ]
 }

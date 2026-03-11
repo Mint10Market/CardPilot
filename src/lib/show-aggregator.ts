@@ -18,6 +18,8 @@ export type NormalizedShow = {
   organizerEmail: string | null;
   organizerPhone: string | null;
   boothInfo: string | null;
+  buyerEntryCost: string | null;
+  vendorBoothCost: string | null;
   vendorCount: number | null;
   sourceContributions: Array<{ sourceName: string; externalId: string; raw?: RawShow }>;
 };
@@ -41,6 +43,8 @@ function normalize(raw: RawShow): Omit<NormalizedShow, "sourceContributions"> {
     organizerEmail: raw.organizerEmail?.trim() ?? null,
     organizerPhone: raw.organizerPhone?.trim() ?? null,
     boothInfo: raw.boothInfo?.trim() ?? null,
+    buyerEntryCost: raw.buyerEntryCost?.trim() ?? null,
+    vendorBoothCost: raw.vendorBoothCost?.trim() ?? null,
     vendorCount: raw.vendorCount != null ? Number(raw.vendorCount) : null,
   };
 }
@@ -82,6 +86,10 @@ export function aggregateShows(
         if (raw.vendorCount != null && existing.vendorCount == null)
           existing.vendorCount = Number(raw.vendorCount);
         if (raw.boothInfo && !existing.boothInfo) existing.boothInfo = raw.boothInfo.trim();
+        if (raw.buyerEntryCost && !existing.buyerEntryCost)
+          existing.buyerEntryCost = raw.buyerEntryCost.trim();
+        if (raw.vendorBoothCost && !existing.vendorBoothCost)
+          existing.vendorBoothCost = raw.vendorBoothCost.trim();
         if (raw.organizerPhone && !existing.organizerPhone)
           existing.organizerPhone = raw.organizerPhone.trim();
       } else {
@@ -132,6 +140,8 @@ export function toDbShow(show: NormalizedShow): {
       organizerEmail: show.organizerEmail,
       organizerPhone: show.organizerPhone,
       boothInfo: show.boothInfo,
+      buyerEntryCost: show.buyerEntryCost,
+      vendorBoothCost: show.vendorBoothCost,
       vendorCount: show.vendorCount,
       credibilityScore,
       hotColdRating: rating,

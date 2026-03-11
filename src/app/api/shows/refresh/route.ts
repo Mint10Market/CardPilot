@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { refreshShows } from "@/lib/refresh-shows";
+import { requireUser } from "@/lib/auth-server";
 
 /**
- * Refresh card shows from configured sources. Secured by CRON_SECRET:
- * caller must send Authorization: Bearer <CRON_SECRET> (same as /api/sync/scheduled).
+ * Refresh card shows from configured sources.
+ * Auth: CRON_SECRET (Authorization: Bearer <CRON_SECRET>) for cron, or authenticated user (session).
  */
 export async function POST(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
-  }
   const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const isCron = Boolean(secret && auth === `Bearer ${secret}`);
+
+  if (!isCron) {
+    try {
+      await requireUser();
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   try {
