@@ -12,7 +12,7 @@ function getConnectionString(): string {
   const isDirectSupabase = (u: string) =>
     /@db\.[a-z0-9]+\.supabase\.co(?:[:\/]|$)/i.test(u);
   const isPooler = (u: string) =>
-    u.includes("pooler.supabase.com") || /:6543[/]?/.test(u);
+    u.includes("pooler.supabase.com") || u.includes(":6543");
 
   // On Vercel, direct Supabase host (db.xxx.supabase.co) often fails with ENOTFOUND. Prefer pooler URL.
   if (process.env.VERCEL && candidates.length > 0) {
@@ -46,7 +46,13 @@ function getConnectionString(): string {
   }
 
   const encodedPassword = encodeURIComponent(password);
-  return `postgresql://${user}:${encodedPassword}@${host}:${port}/${database}`;
+  const built = `postgresql://${user}:${encodedPassword}@${host}:${port}/${database}`;
+  if (process.env.VERCEL && isDirectSupabase(built)) {
+    throw new Error(
+      "On Vercel, Supabase direct host (db.*.supabase.co) is not reachable. Set DATABASE_URL or SUPABASE_DB_URL to the Shared Pooler URI from Supabase Connect panel (IPv4 COMPATIBLE, host like aws-0-*.pooler.supabase.com:6543)."
+    );
+  }
+  return built;
 }
 
 const connectionString = getConnectionString();
