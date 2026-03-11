@@ -19,7 +19,7 @@ Add these in **Vercel → Your Project → Settings → Environment Variables**.
 
 | Variable | Example / notes |
 |----------|------------------|
-| `DATABASE_URL` | `postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres` (from Supabase → Database) |
+| `DATABASE_URL` | Local/direct: `...@db.[PROJECT_REF].supabase.co:5432/postgres`. Vercel: use Shared Pooler (port **6543**) from Supabase Connect panel to avoid ENOTFOUND. |
 | `EBAY_CLIENT_ID` | Your eBay app Client ID |
 | `EBAY_CLIENT_SECRET` | Your eBay app Client Secret |
 | `EBAY_REDIRECT_URI` | `https://card-pilot.vercel.app/api/auth/ebay/callback` |
@@ -52,10 +52,10 @@ You do **not** need to add these to Trigger.dev unless your jobs use them:
 
 ## Quick copy-paste (Vercel)
 
-Use your real values; this is the shape:
+Use your real values; this is the shape. For `DATABASE_URL` on Vercel use the **Shared Pooler** URI (port **6543**) from Supabase Connect, not the direct URI (5432).
 
 ```
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres
+DATABASE_URL=postgresql://postgres.PROJECT_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres
 EBAY_CLIENT_ID=your_ebay_client_id
 EBAY_CLIENT_SECRET=your_ebay_client_secret
 EBAY_REDIRECT_URI=https://card-pilot.vercel.app/api/auth/ebay/callback
@@ -68,6 +68,8 @@ SESSION_SECRET=your_session_secret_min_32_chars
 ---
 
 ## Quick copy-paste (Trigger.dev)
+
+Use direct (5432) or pooler (6543) per Supabase/Trigger.dev docs:
 
 ```
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres

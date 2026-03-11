@@ -7,7 +7,7 @@ Fill in the values below (replace the text in brackets with your real values). W
 ## 1. Database
 
 **DATABASE_URL**  
-Your PostgreSQL connection string (from Supabase, Neon, or your host).
+Your PostgreSQL connection string (from Supabase, Neon, or your host). Supabase: direct = port 5432; pooler (for Vercel) = port 6543.
 
 Example: `postgresql://username:password@host.example.com:5432/cardpilot`
 

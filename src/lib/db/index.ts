@@ -11,6 +11,7 @@ function getConnectionString(): string {
 
   const isDirectSupabase = (u: string) =>
     /@db\.[a-z0-9]+\.supabase\.co(?:[:\/]|$)/i.test(u);
+  // Supabase: direct = port 5432, pooler (Transaction) = port 6543; use pooler on Vercel.
   const isPooler = (u: string) =>
     u.includes("pooler.supabase.com") || u.includes(":6543");
 
@@ -37,7 +38,7 @@ function getConnectionString(): string {
     process.env.POSTGRES_HOST ?? process.env.SUPABASE_DB_HOST;
   const database =
     process.env.POSTGRES_DATABASE ?? process.env.SUPABASE_DB_NAME ?? "postgres";
-  const port = process.env.POSTGRES_PORT ?? "5432";
+  const port = process.env.POSTGRES_PORT ?? "5432"; // direct; use 6543 for pooler (Vercel).
 
   if (!host || !password) {
     throw new Error(
