@@ -46,12 +46,19 @@ export async function getValidAccessToken(userId: string): Promise<string> {
   return refreshed.access_token;
 }
 
+// eBay Fulfillment API: Order uses pricingSummary (PricingSummary.total = Amount) and paymentSummary (PaymentSummary)
+type Amount = { value?: string; currency?: string };
 type EbayOrder = {
   orderId?: string;
   creationDate?: string;
   orderFulfillmentStatus?: string;
   buyer?: { username?: string; buyerUserId?: string };
-  orderPaymentSummary?: { total?: string; payments?: Array<{ amount?: { value?: string; currency?: string } }> };
+  /** Actual API field: order total (Amount object) */
+  pricingSummary?: { total?: Amount | string };
+  /** Actual API field: payment details */
+  paymentSummary?: { payments?: Array<{ amount?: Amount }> };
+  /** Legacy/deprecated name some docs use */
+  orderPaymentSummary?: { total?: string; payments?: Array<{ amount?: Amount }> };
   lineItems?: Array<{
     title?: string;
     quantity?: number;
@@ -59,6 +66,27 @@ type EbayOrder = {
     baseUnitPrice?: { value?: string };
   }>;
 };
+
+function getOrderTotal(order: EbayOrder): { value: string; currency: string } {
+  const amountObj = (a: Amount | string | undefined): string =>
+    typeof a === "string" ? a : a?.value ?? "0";
+  const currencyFrom = (a: Amount | string | undefined): string =>
+    typeof a === "string" ? "USD" : a?.currency ?? "USD";
+  const total =
+    order.pricingSummary?.total != null
+      ? amountObj(order.pricingSummary.total)
+      : order.orderPaymentSummary?.total ??
+        order.paymentSummary?.payments?.[0]?.amount?.value ??
+        order.orderPaymentSummary?.payments?.[0]?.amount?.value ??
+        "0";
+  const currency =
+    order.pricingSummary?.total != null
+      ? currencyFrom(order.pricingSummary.total)
+      : order.paymentSummary?.payments?.[0]?.amount?.currency ??
+        order.orderPaymentSummary?.payments?.[0]?.amount?.currency ??
+        "USD";
+  return { value: total, currency };
+}
 
 type OrderSearchResponse = {
   orders?: EbayOrder[];
@@ -68,10 +96,23 @@ type OrderSearchResponse = {
 
 const MAX_DAYS_BACK = 730; // eBay allows up to 2 years
 
-export async function syncOrdersForUser(userId: string, options?: { daysBack?: number }): Promise<{ count: number }> {
+export type SyncProgressEvent =
+  | { type: "start"; daysBack: number }
+  | { type: "page"; offset: number; countInPage: number; totalSoFar: number }
+  | { type: "order"; orderId: string; totalAmount: string; totalSoFar: number }
+  | { type: "done"; count: number }
+  | { type: "error"; message: string };
+
+export async function syncOrdersForUser(
+  userId: string,
+  options?: { daysBack?: number; onProgress?: (event: SyncProgressEvent) => void }
+): Promise<{ count: number }> {
   const accessToken = await getValidAccessToken(userId);
   const raw = options?.daysBack ?? 90;
   const daysBack = Math.min(MAX_DAYS_BACK, Math.max(1, Number.isFinite(raw) ? raw : 90));
+  const onProgress = options?.onProgress;
+  onProgress?.({ type: "start", daysBack });
+
   const from = new Date();
   from.setDate(from.getDate() - daysBack);
   const filter = `creationdate:[${from.toISOString()}..]`;
@@ -93,7 +134,7 @@ export async function syncOrdersForUser(userId: string, options?: { daysBack?: n
     const list = data.orders ?? [];
     for (const o of list) {
       if (!o.orderId || !o.creationDate) continue;
-      const totalAmount = o.orderPaymentSummary?.total ?? o.orderPaymentSummary?.payments?.[0]?.amount?.value ?? "0";
+      const { value: totalAmount, currency } = getOrderTotal(o);
       const lineItems = (o.lineItems ?? []).map((li) => ({
         sku: li.sku,
         title: li.title ?? "",
@@ -110,7 +151,7 @@ export async function syncOrdersForUser(userId: string, options?: { daysBack?: n
           buyerUserId: o.buyer?.buyerUserId ?? null,
           status: o.orderFulfillmentStatus ?? "UNKNOWN",
           totalAmount,
-          currency: o.orderPaymentSummary?.payments?.[0]?.amount?.currency ?? "USD",
+          currency,
           lineItems,
           rawPayload: o as unknown as Record<string, unknown>,
         })
@@ -128,6 +169,7 @@ export async function syncOrdersForUser(userId: string, options?: { daysBack?: n
           },
         });
       count++;
+      onProgress?.({ type: "order", orderId: o.orderId, totalAmount, totalSoFar: count });
       const identifier = o.buyer?.username ?? o.buyer?.buyerUserId ?? null;
       if (identifier) {
         await db
@@ -141,8 +183,10 @@ export async function syncOrdersForUser(userId: string, options?: { daysBack?: n
           .onConflictDoNothing({ target: [customers.userId, customers.identifier] });
       }
     }
+    onProgress?.({ type: "page", offset, countInPage: list.length, totalSoFar: count });
     if (list.length < limit) break;
     offset += limit;
   }
+  onProgress?.({ type: "done", count });
   return { count };
 }
