@@ -15,13 +15,13 @@ describe("getEbayAuthUrl", () => {
   it("throws when EBAY_CLIENT_ID is missing", () => {
     process.env.EBAY_CLIENT_ID = "";
     process.env.EBAY_REDIRECT_URI = "https://app.example.com/callback";
-    expect(() => getEbayAuthUrl()).toThrow("EBAY_CLIENT_ID and EBAY_REDIRECT_URI must be set");
+    expect(() => getEbayAuthUrl()).toThrow("EBAY_CLIENT_ID and redirect URI must be set");
   });
 
   it("throws when EBAY_REDIRECT_URI is missing", () => {
     process.env.EBAY_CLIENT_ID = "test-client-id";
     process.env.EBAY_REDIRECT_URI = "";
-    expect(() => getEbayAuthUrl()).toThrow("EBAY_CLIENT_ID and EBAY_REDIRECT_URI must be set");
+    expect(() => getEbayAuthUrl()).toThrow("EBAY_CLIENT_ID and redirect URI must be set");
   });
 
   it("returns URL containing redirect_uri and client_id when env is set", () => {
