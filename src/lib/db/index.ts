@@ -56,12 +56,32 @@ function getConnectionString(): string {
   return built;
 }
 
-const connectionString = getConnectionString();
+// Lazy init so next build can run without DATABASE_URL (config only required at runtime when db is used).
+let _client: ReturnType<typeof postgres> | null = null;
+let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-// Serverless (Vercel): use max 1 per invocation. Pooler URL (port 6543) preferred in production.
-const client = postgres(connectionString, {
-  max: 1,
-  ...(process.env.NODE_ENV === "production" && { connect_timeout: 10 }),
+function getClient(): ReturnType<typeof postgres> {
+  if (!_client) {
+    const connectionString = getConnectionString();
+    _client = postgres(connectionString, {
+      max: 1,
+      ...(process.env.NODE_ENV === "production" && { connect_timeout: 10 }),
+    });
+  }
+  return _client;
+}
+
+function getDb(): ReturnType<typeof drizzle<typeof schema>> {
+  if (!_db) {
+    _db = drizzle(getClient(), { schema });
+  }
+  return _db;
+}
+
+export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+  get(_, prop) {
+    return (getDb() as unknown as Record<string, unknown>)[prop as string];
+  },
 });
-export const db = drizzle(client, { schema });
+
 export * from "./schema";

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { useFeedback } from "@/components/FeedbackContext";
 
 type Item = {
   id: string;
@@ -15,21 +16,31 @@ type Item = {
 };
 
 export function InventoryList() {
+  const { showToast } = useFeedback();
   const [list, setList] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
-  const load = () =>
-    fetch("/api/inventory")
+  const load = useCallback(() => {
+    return fetch("/api/inventory")
       .then((r) => r.json())
       .then(setList)
-      .catch(() => setList([]))
-      .then(() => setLoading(false), () => setLoading(false));
+      .catch(() => setList([]));
+  }, []);
 
   useEffect(() => {
-    load();
-  }, []);
+    let cancelled = false;
+    queueMicrotask(() => setLoading(true));
+    load().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
 
   const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,15 +79,43 @@ export function InventoryList() {
     e.target.value = "";
   };
 
+  const handleSyncFromEbay = async () => {
+    setSyncing(true);
+    setSyncError(null);
+    try {
+      const res = await fetch("/api/inventory/sync", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Sync failed");
+      const msg = `Synced ${data.count ?? 0} items from eBay.`;
+      showToast(msg, "success");
+      await load();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Sync failed";
+      setSyncError(msg);
+      showToast(msg, "error");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   if (loading) return <p className="text-[var(--muted)]">Loading…</p>;
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-center">
+        <button
+          type="button"
+          onClick={handleSyncFromEbay}
+          disabled={syncing}
+          className="min-h-[var(--touch-target-min)] rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:opacity-90"
+          aria-busy={syncing}
+        >
+          {syncing ? "Syncing…" : "Sync from eBay"}
+        </button>
         <button
           type="button"
           onClick={() => setShowAdd(!showAdd)}
-          className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-3 py-1.5 text-sm font-medium hover:opacity-90"
+          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] px-3 py-1.5 text-sm font-medium hover:border-[var(--muted)]"
         >
           {showAdd ? "Cancel" : "Add item"}
         </button>
@@ -86,6 +125,9 @@ export function InventoryList() {
         </label>
         {importMessage && (
           <span className="text-sm text-[var(--muted)]">{importMessage}</span>
+        )}
+        {syncError && (
+          <span className="text-sm text-[var(--error)]">{syncError}</span>
         )}
       </div>
       {showAdd && (
@@ -120,7 +162,7 @@ export function InventoryList() {
             {list.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-4 text-[var(--muted)]">
-                  No items. Add manually or import CSV (columns: title, sku, quantity, price, condition, category).
+                  No items. Sync from eBay, add manually, or import CSV (columns: title, sku, quantity, price, condition, category).
                 </td>
               </tr>
             ) : (

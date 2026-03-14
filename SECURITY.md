@@ -2,7 +2,11 @@
 
 ## Verify `.env.local` is not tracked
 
-Run: `git check-ignore -v .env.local` (should show a .gitignore rule) and `git ls-files .env.local` (should output nothing). Do not use `git add -f .env.local`; that would commit secrets.
+**Before pushing:**
+
+1. **Don’t force-add it:** Never run `git add -f .env.local`; that would commit secrets.
+2. **Confirm nothing secret is staged:** Run `git status` and ensure `.env.local` never appears under “Changes to be committed”.
+3. **Optional check:** Run `npm run verify:secrets` (or manually: `git check-ignore -v .env.local` and `git ls-files .env.local`). The script ensures `.env.local` is ignored, not tracked, and not staged.
 
 ## If `.env.local` or any secrets were committed
 

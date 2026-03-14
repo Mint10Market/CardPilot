@@ -19,6 +19,7 @@ function getFulfillmentBase(): string {
 
 const FIVE_MINUTES_MS = 60 * 5 * 1000;
 
+/** Exported for use by ebay-inventory-sync. */
 export async function getValidAccessToken(userId: string): Promise<string> {
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
