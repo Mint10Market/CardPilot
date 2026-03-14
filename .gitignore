@@ -30,15 +30,16 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — never commit .env.local or files with real secrets
+# env files — never commit; rotate secrets if any were ever committed (see SECURITY.md)
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env*.local
 .env*
 # Track .env.example as a template (no secrets)
 !.env.example
-# Explicitly ignore env with secrets (do not remove)
-.env.local
 
 # vercel
 .vercel

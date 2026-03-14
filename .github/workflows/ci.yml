@@ -12,15 +12,18 @@ jobs:
       - uses: actions/checkout@v4
       - name: Block committed secret env files
         run: |
-          tracked=$(git ls-files .env .env.local .env.development.local .env.test.local .env.production.local 2>/dev/null || true)
-          if [ -n "$tracked" ]; then
-            echo "::error::Secret env files must not be committed: $tracked. Remove from git and rotate all secrets. See SECURITY.md"
-            exit 1
-          fi
+          # Match exact filenames that must never be committed (see .gitignore and SECURITY.md)
+          for f in .env .env.local .env.development.local .env.test.local .env.production.local; do
+            if git ls-files --error-unmatch "$f" 2>/dev/null; then
+              echo "::error::Secret env file is committed: $f. Remove with 'git rm --cached $f', commit, and rotate all secrets. See SECURITY.md"
+              exit 1
+            fi
+          done
           echo "No secret env files are committed."
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      - run: npm run check
+      - run: npm run lint
+      - run: npm run build

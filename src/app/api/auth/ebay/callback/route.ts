@@ -22,7 +22,25 @@ export async function GET(request: NextRequest) {
 
   // No code: likely a direct hit (e.g. eBay Developer Portal "Test redirect URI") — send to app home without error.
   if (!code) return NextResponse.redirect(`${url}/`);
-  if (state !== savedState) return NextResponse.redirect(`${url}/?error=invalid_state`);
+
+  if (state !== savedState) {
+    logger.warn(
+      "eBay callback: state mismatch (query=%s, cookie=%s). Clearing state cookie and restarting auth.",
+      state,
+      savedState
+    );
+
+    // If the user already has an app session, treat this as a stale / cached eBay tab and just send them to the dashboard.
+    const existingSession = cookieStore.get(getSessionCookieName())?.value;
+    if (existingSession) {
+      return NextResponse.redirect(`${url}/dashboard`);
+    }
+
+    // Otherwise, clear stale state and restart the OAuth flow once, so cached eBay sign-in pages recover automatically.
+    const res = NextResponse.redirect(`${request.nextUrl.origin}/api/auth/ebay`);
+    res.cookies.delete("ebay_oauth_state");
+    return res;
+  }
 
   try {
     const tokens = await exchangeCodeForTokens(code, redirectUri);
