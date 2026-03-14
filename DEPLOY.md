@@ -119,7 +119,26 @@ Use the URL it prints (e.g. `https://card-pilot.vercel.app`).
 
 ---
 
-## 4. After first deploy
+## 4. Scheduled jobs (Trigger.dev — free, replaces Vercel Cron)
+
+Vercel Hobby does not support Cron. Use **Trigger.dev** (free tier) so eBay sync and shows refresh run on a schedule:
+
+1. **Sign up:** [trigger.dev](https://trigger.dev) → create a project → copy your **project ref** (e.g. `proj_xxxx`).
+2. **Config:** In `trigger.config.ts`, set `project` to your ref (or set env **TRIGGER_PROJECT_REF** when running the CLI).
+3. **Env in Trigger.dev:** In the Trigger.dev dashboard → your project → **Environment Variables**, add:
+   - **APP_URL** = your Vercel app URL (e.g. `https://card-pilot.vercel.app`)
+   - **CRON_SECRET** = same value as in Vercel (the API routes require `Authorization: Bearer <CRON_SECRET>`)
+4. **Deploy tasks:** From the project root run:
+   ```bash
+   npm run trigger:deploy
+   ```
+   Schedules are defined in `trigger/card-pilot-schedules.ts` (daily eBay sync, hourly shows refresh) and sync on deploy.
+
+**Alternative:** Use a free external cron (e.g. [cron-job.org](https://cron-job.org)) to POST to `https://your-app.vercel.app/api/sync/scheduled` and `.../api/shows/refresh` with header `Authorization: Bearer YOUR_CRON_SECRET` on the desired schedule.
+
+---
+
+## 5. After first deploy
 
 1. In Vercel → Project → **Settings → Environment Variables**, set:
    - `NEXT_PUBLIC_APP_URL` = `https://card-pilot.vercel.app`

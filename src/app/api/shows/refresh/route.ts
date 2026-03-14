@@ -4,14 +4,14 @@ import { requireUser } from "@/lib/auth-server";
 
 /**
  * Refresh card shows from configured sources.
- * Auth: CRON_SECRET (Authorization: Bearer <CRON_SECRET>) for cron, or authenticated user (session).
+ * Auth: Trigger.dev/scheduler sends Authorization: Bearer <CRON_SECRET>; or authenticated user (session).
  */
 export async function POST(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const auth = request.headers.get("authorization");
-  const isCron = Boolean(secret && auth === `Bearer ${secret}`);
+  const isScheduledCall = Boolean(secret && auth === `Bearer ${secret}`);
 
-  if (!isCron) {
+  if (!isScheduledCall) {
     try {
       await requireUser();
     } catch {

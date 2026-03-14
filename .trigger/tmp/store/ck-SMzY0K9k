@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../trigger.config.ts"],
+  "sourcesContent": ["import { defineConfig } from \"@trigger.dev/sdk\";\n\nexport default defineConfig({\n  // Set TRIGGER_PROJECT_REF in env or replace with your project ref from trigger.dev dashboard\n  project: process.env.TRIGGER_PROJECT_REF ?? \"proj_buougwcfdsundgzkqqqx\",\n\n  dirs: [\"./trigger\"],\n\n  // 5 min max per task (required by Trigger.dev)\n  maxDuration: 300,\n\n  build: {}\n});\nexport const resolveEnvVars = undefined;"],
+  "mappings": ";;;;;;;;;AAAA;AAEA,IAAO,yBAAQ,aAAa;AAAA;AAAA,EAE1B,SAAS,QAAQ,IAAI,uBAAuB;AAAA,EAE5C,MAAM,CAAC,WAAW;AAAA;AAAA,EAGlB,aAAa;AAAA,EAEb,OAAO,CAAC;AACV,CAAC;AACM,IAAM,iBAAiB;",
+  "names": []
+}

@@ -18,18 +18,22 @@ export async function refreshShows(): Promise<{ count: number }> {
 
   const aggregated = aggregateShows(sourceResults);
 
-  await db.delete(showSources);
-  await db.delete(cardShows);
-
-  let count = 0;
-  for (const show of aggregated) {
-    const { show: showRow, getSources } = toDbShow(show);
-    const [inserted] = await db.insert(cardShows).values(showRow).returning({ id: cardShows.id });
-    if (inserted) {
-      const sources = getSources(inserted.id);
-      if (sources.length) await db.insert(showSources).values(sources);
-      count++;
+  const count = await db.transaction(async (tx) => {
+    // Delete card_shows first; FK cascade removes show_sources. Single transaction avoids
+    // concurrent refresh runs interleaving (e.g. one run wiping another's inserts).
+    await tx.delete(cardShows);
+    let n = 0;
+    for (const show of aggregated) {
+      const { show: showRow, getSources } = toDbShow(show);
+      const [inserted] = await tx.insert(cardShows).values(showRow).returning({ id: cardShows.id });
+      if (inserted) {
+        const sources = getSources(inserted.id);
+        if (sources.length) await tx.insert(showSources).values(sources);
+        n++;
+      }
     }
-  }
+    return n;
+  });
+
   return { count };
 }

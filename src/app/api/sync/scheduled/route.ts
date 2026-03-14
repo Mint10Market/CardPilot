@@ -9,8 +9,8 @@ export const maxDuration = 60;
 
 /**
  * Scheduled eBay sync for all users with eBay connected.
- * Secured by CRON_SECRET: caller must send Authorization: Bearer <CRON_SECRET>.
- * Vercel Cron sends GET requests; external crons may use POST. Both are accepted.
+ * Invoked by Trigger.dev (scheduled task) or external scheduler.
+ * Auth: Authorization: Bearer <CRON_SECRET>. GET and POST accepted.
  */
 async function runScheduledSync(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -64,12 +64,11 @@ async function runScheduledSync(request: Request) {
   });
 }
 
-/** Vercel Cron invokes cron paths with GET. */
 export async function GET(request: Request) {
   return runScheduledSync(request);
 }
 
-/** External crons (e.g. cron-job.org) may use POST. */
+/** Trigger.dev scheduled task uses POST. */
 export async function POST(request: Request) {
   return runScheduledSync(request);
 }

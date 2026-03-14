@@ -117,17 +117,37 @@ To refresh shows manually (and aggregate from all configured adapters), call `/a
 curl -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/shows/refresh
 ```
 
-In production use the same header with your `CRON_SECRET`. Run this periodically via **Vercel Cron** or an external scheduler (see `DEPLOY.md`) so the `card_shows` table stays up to date.
+In production run this periodically via **Trigger.dev** (recommended, free tier) or an external cron (see below).
 
-## Scheduled eBay sync (Vercel Cron)
+## Scheduled jobs (Trigger.dev — free, no Vercel Pro)
 
-The app syncs eBay orders for all users on a schedule via **Vercel Cron**. No separate trigger or automation tool is required.
+Vercel Cron is not available on Hobby. This project uses **[Trigger.dev](https://trigger.dev)** (free tier: 10 schedules) to run:
 
-- **Config:** `vercel.json` defines one cron: path `/api/sync/scheduled` every 6 hours (`0 */6 * * *`). Vercel Cron sends **GET** requests; the route handles both GET and POST.
-- **Secret:** In Vercel → Project → Settings → Environment Variables, set **CRON_SECRET** to a long random string. Vercel sends `Authorization: Bearer <CRON_SECRET>` when invoking the cron; the route rejects requests without it.
-- **Result:** Each run syncs the last 90 days of orders for every user and updates their "Last synced" status on the dashboard.
+- **eBay sync** — daily at midnight UTC: `POST /api/sync/scheduled` (syncs last 90 days for all users).
+- **Card shows refresh** — every hour: `POST /api/shows/refresh`.
 
-If your Vercel plan does not support Cron Jobs, use an external cron (e.g. [cron-job.org](https://cron-job.org)) to call `https://your-app.vercel.app/api/sync/scheduled` with header `Authorization: Bearer YOUR_CRON_SECRET` on the same schedule.
+### One-time Trigger.dev setup
+
+1. Sign up at [trigger.dev](https://trigger.dev) and create a project. Copy your **project ref** (e.g. `proj_xxxx`).
+2. In the project root, set the ref:  
+   `trigger.config.ts` has `project: process.env.TRIGGER_PROJECT_REF ?? "proj_card-pilot"` — either set env **TRIGGER_PROJECT_REF** or replace the default with your ref.
+3. In Trigger.dev dashboard → your project → **Environment Variables**, add:
+   - **APP_URL** = `https://card-pilot.vercel.app` (your Vercel app URL)
+   - **CRON_SECRET** = same long random string as in Vercel (so the API accepts the request)
+4. Deploy tasks:  
+   `npm run trigger:deploy`  
+   (or `npx trigger.dev@latest deploy`). Schedules sync automatically from the `trigger/` folder.
+
+See `DEPLOY.md` for more detail. To run schedules locally: `npm run trigger:dev`.
+
+### Alternative: external cron (free)
+
+If you prefer not to use Trigger.dev, use a free external cron (e.g. [cron-job.org](https://cron-job.org)):
+
+- **eBay sync:** daily, POST `https://your-app.vercel.app/api/sync/scheduled` with header `Authorization: Bearer YOUR_CRON_SECRET`.
+- **Shows refresh:** hourly, POST `https://your-app.vercel.app/api/shows/refresh` with the same header.
+
+Keep **CRON_SECRET** set in Vercel so the routes accept these requests.
 
 ## Run checks before push
 

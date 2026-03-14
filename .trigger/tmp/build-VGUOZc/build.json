@@ -1,0 +1,104 @@
+{
+  "build": {
+  },
+  "cliPackageVersion": "4.4.3",
+  "config": {
+    "dirs": [
+      "./trigger"
+    ],
+    "project": "proj_buougwcfdsundgzkqqqx"
+  },
+  "configPath": "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-VGUOZc/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/trigger.config.mjs",
+  "contentHash": "8bc4324d8831642be4873c9ec5186e1c",
+  "customConditions": [
+  ],
+  "deploy": {
+    "env": {
+    }
+  },
+  "environment": "dev",
+  "externals": [
+    {
+      "name": "import-in-the-middle",
+      "version": "1.11.0"
+    }
+  ],
+  "files": [
+    {
+      "entry": "trigger/card-pilot-schedules.ts",
+      "out": "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-VGUOZc/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/trigger/card-pilot-schedules.mjs"
+    }
+  ],
+  "indexWorkerEntryPoint": "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-VGUOZc/private/var/folders/lb/mtv55j8x703cn929g58hk7r80000gn/T/cursor-sandbox-cache/e7b5e983b9ed7293cf4b525f2eeed4e2/npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-index-worker.mjs",
+  "otelImportHook": {
+    "include": [
+    ]
+  },
+  "outputHashes": {
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/trigger.config.mjs": "dgrCwZKFewc",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/trigger.config.mjs.map": "GJvu0YN3U98",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/trigger/card-pilot-schedules.mjs": "EtrDSrjzvZo",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/trigger/card-pilot-schedules.mjs.map": "Y8TJihVww6o",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-36L6LMJU.mjs": "eSS/8fJG7A4",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-36L6LMJU.mjs.map": "2Pjv8nEFoco",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-5ICSHR6J.mjs": "NiXvy6Ohk2U",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-5ICSHR6J.mjs.map": "puYz21APVvQ",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-E3YT2BTV.mjs": "fnluMSC+nkU",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-E3YT2BTV.mjs.map": "LMPzUuAiOIM",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-ESLEIWM3.mjs": "OXQAOFpVJrY",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-ESLEIWM3.mjs.map": "qp6gn0pos28",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-VV4LW7RY.mjs": "12qaXV/goFc",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-VV4LW7RY.mjs.map": "8oweb1Tp7ck",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-YQQI7LRT.mjs": "/daQbVEKVxQ",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-YQQI7LRT.mjs.map": "5FgIvTSxaF8",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-ZTI4TAF7.mjs": "SSHrTJ+tKHw",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/chunk-ZTI4TAF7.mjs.map": "b+nIahkaNso",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/crypto.node-IFJYNGGX.mjs": "0eChEcFUkdA",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/crypto.node-IFJYNGGX.mjs.map": "Vgd9PclQoUI",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/crypto.node-SUW3HDEK.mjs": "yfoxSXJtu0k",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/crypto.node-SUW3HDEK.mjs.map": "0b4tlwmkM3g",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/esm-EHXO4E2E.mjs": "NEqr9jHn90M",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/esm-EHXO4E2E.mjs.map": "CSvtQ8IwLEk",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/esm-NNM7SJVK.mjs": "S1c98yb3b6c",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/esm-NNM7SJVK.mjs.map": "JfGXiyi0Dwg",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-bsd-HUZYIBND.mjs": "mf5EDrZ8tLc",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-bsd-HUZYIBND.mjs.map": "hgcJr18xiik",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-darwin-ZPELWT2F.mjs": "/51wDT7B9J4",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-darwin-ZPELWT2F.mjs.map": "A39RPUtzjd8",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-linux-HPUVSHS4.mjs": "SGvPoUJT0Dg",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-linux-HPUVSHS4.mjs.map": "pwQFlyqDlzw",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-unsupported-VSQDZ7QK.mjs": "NMX13i7HAfY",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-unsupported-VSQDZ7QK.mjs.map": "30RSxHC7baY",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-win-BVJLCVST.mjs": "VnwtjTgqEs4",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/getMachineId-win-BVJLCVST.mjs.map": "tXVvH4fCAgI",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/private/var/folders/lb/mtv55j8x703cn929g58hk7r80000gn/T/cursor-sandbox-cache/e7b5e983b9ed7293cf4b525f2eeed4e2/npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-index-worker.mjs": "+K1YCLlC+WI",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/private/var/folders/lb/mtv55j8x703cn929g58hk7r80000gn/T/cursor-sandbox-cache/e7b5e983b9ed7293cf4b525f2eeed4e2/npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-index-worker.mjs.map": "JeBdclsfK5w",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/private/var/folders/lb/mtv55j8x703cn929g58hk7r80000gn/T/cursor-sandbox-cache/e7b5e983b9ed7293cf4b525f2eeed4e2/npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-run-worker.mjs": "xLWLDoXsYv4",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/private/var/folders/lb/mtv55j8x703cn929g58hk7r80000gn/T/cursor-sandbox-cache/e7b5e983b9ed7293cf4b525f2eeed4e2/npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-run-worker.mjs.map": "E+VCCndwPlc",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/s2s-OGXX77SH.mjs": "Yf7SGCKQITg",
+    "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-juAb1O/s2s-OGXX77SH.mjs.map": "cv0uYJgrln0"
+  },
+  "outputPath": "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-VGUOZc",
+  "packageVersion": "4.4.3",
+  "runWorkerEntryPoint": "/Users/alex/Library/CloudStorage/OneDrive-TellumIT/Card Pilot/.trigger/tmp/build-VGUOZc/private/var/folders/lb/mtv55j8x703cn929g58hk7r80000gn/T/cursor-sandbox-cache/e7b5e983b9ed7293cf4b525f2eeed4e2/npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-run-worker.mjs",
+  "runtime": "node",
+  "sources": {
+    "package.json": {
+      "contentHash": "abcc6de932b79d26d1c2a50a617312a9",
+      "contents": "eJx9VM1S8yAU3ecpGBauDE1s66dZdeFzZCaFa8pXAgyQWHV8dwcICdaOOzjn3J9zb8hngRCW3QC4QZh2hpWaC+XwvccnMJYr6amK1KSKqDZ86pwPcGaEAFlquHYWN+izQAghzGDyURIuDvnzfYSPIxdsIeJtpqzrjFuoeJspweXK+AsqS8YNsoYmCT0BPQeNHpAZZZTd3aF0/1ErqJvXUYg8JKB5jAO79BDODcIT9ydP50zz1jl6WvnEsWPTgwQTx4WZ4R8fAsozd2jBV+nA+1vKBK9CPdrTtSpgqSXD+x5Mk7agL2iGCIPpILrgIdvLGqCFev8zJggKhL7C4hlokAwk5ZBvf+5LmcHnaiuy25M6FfuvbPDYPpKabBPql+vR2qOPCdXKut6E3Ljdkh15SoyBjsaAZ/KwpglwydTwm7oIe5nbqZ/IPjcxvdz0cXAdF29cMmrtxrdCbexkl3IeshltLDtHluzWqgf3rsFupGLR9EN1xSxG2vr5FpXMZPSxO4IotRh7LssoomrQXIAJtklFlipMOZBTTPCPbNc1ZB/PPJVtTZYSYNOra6+wkir5yvvy9sKyif2cVHAUfhMB3yd8fjBxbn4zYS/FV/ENTOxIaw=="
+    },
+    "trigger.config.ts": {
+      "contentHash": "007d6d58c8425d2ceb77bde13a70d092",
+      "contents": "eJxtT8FKw0AUvO9XDDm1EJKCeEkPFWoselFCbiJhm31J1ia78e0mtpT+u6RWtOBtmDfzZkZ3vWWPIxRV2tDamkrXOKFi2yG486zrmjhSNMZO7YKlELQ/OxRVcmj9lW92FEAcI6OPQTOpBI488uxxs0mz4iV7fkrXeZGlD9AGZMYQlsHUt7Ik+IZwRo1tFTE+tW9wsAOjZ/tOpQdT9d3rTyso6ZqtlawEfoTJBEpyLiIzRv/Fr1YIJnEx/S8utoKpCkIBKM0uwWsQxZeg4G2iO7m/H1h6bU2Cm8UinKbeotNmOqEnhpduhxlf5mN7QP5bdS5O86X4AuySfL0="
+    },
+    "trigger/card-pilot-schedules.ts": {
+      "contentHash": "61807388e904a587c7523a658eed2279",
+      "contents": "eJzdk09v2kAQxe98ileLg43A5tKLEU0TitRIUYqAqD1UgsUe8ArjRbNrEmr5u1dr8zdtpJ5aqbbkw+7MmzczPwetVgMtTFmuVsR+TDvoKKE4TymGEXqtYRJhEIk0xUBwjJFMlcHt6B6sckPat/kTMpDZlUwsdLJQguMQt6PR7Gn80MZg/OVxNhkOxsOpTQsacrNVbFCcimqUWLLawPlozmKBjtdOr9GIVKYNVmQGKlvKFfpwPfQ/oGgA9d1CaEIfW1YRae1TtvMP1XFzc3X8OPw2nY2e7h7uB7NDSO8koyliMq+ELtzbSLmE+87Wu/G1EWz0V2kS10mM2TqeV3kCTMLqGRk9Y8is2HWObhTjNw6wyW0TBE0GLvkrH1ZPh0EQCY47Wzt8f0ccUeqL7dZzPGulPNqpfb9Z/KKDq0qvVkfZTrLKNpSZsz6TyTlDUY04rL4+0zYVEbnB96AZtOE4Xvs4urLXKHuNRtBq4ZOQ6R50J/ZQHBND77MIS8WwUOWaWMPdyDiTq8TgaTrwfMsGvVRs1AuhhdhP9lk0OcHZPzPjW1Bd27OMQzg2tmNrdE4oO227WlZZCKeLLlr2rQ45z0KIytGZpSMGdbPnntA/w+dWkzlG5pyij3mzsAllILYysJrBycH8MppJow/xLKTBkkyUuDmn7UNpYEMmUbaT0ZfJtHJpn4RETKxDFLjNTaJY/hBG2pbmdySYGM2iNlrOUdZZ5ZVJQy/mVJft3OjFHPuo+LGHau2dnLwmaF5tsd6fkHYNzcLmaCNMrssQzcJqlvODaFl9T+iodQjDuZ1olRDinNzGQsX7sDLp61RG5HbbeN/tepYl2I5sNxVRn1XO6R72l4BO1LMG05JJJ7+CU12P69s/gaeK7xzk3gKo9XcAslaCg5X/hJ/J5bb+FUM/AdKUMLI="
+    },
+    "tsconfig.json": {
+      "contentHash": "def08454729b96eb4017b7fd08ba3771",
+      "contents": "eJxtUU1vwjAMvfdXWDlW0G47TZwmTRyGhiZtR4SmtLEgI19KXMaE+O9T0oZBxynxe362n30sAFhrtZMK/ZsjaU1gMzgWAACMuN8gsRmw+cfD3f0jm/S4kg2bwYoJq9kE4lNJQs8bhTHGYPBA/S/J1oOOK2W/F7EB+Q4HMOyke5XN8xbb3YghL1u6xoydaznCMCyt6BS+GEJv3TWpExU95LEu8XcMVnXRdsxoOiMU+pziI7nHRbBmmatcVJbBKk4oem7k6iscYkWPvKVpDLLItB41GuLqWuBUt5Fp+asEwHCE3jXXyUIyMMCn9ObVOk7bv8sBsKe6TDeq6uDbumTrIotOURIHUZ3Ac79Ue4pmX4mKQh63LOvyf3h2U0VRTT8OQz1K7SmB+9t0CjWF6CZ5YHg4D8SMFfiph72ui1PxC1fkuLQ="
+    }
+  },
+  "target": "dev"
+}
