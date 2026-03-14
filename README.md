@@ -70,13 +70,54 @@ Open [http://localhost:3000](http://localhost:3000) (local) or [https://card-pil
 
 ## Card shows data
 
-To load seed shows, call (requires **CRON_SECRET** in env; send `Authorization: Bearer <CRON_SECRET>`):
+Card shows are stored in the `card_shows` table and populated by `/api/shows/refresh` from one or more **show source adapters** in `src/lib/show-sources/`:
+
+- `json-feed` — optional adapter that reads from `CARD_SHOWS_FEED_URL` (a JSON array of shows you host).
+- `static` — seed data for local/dev (a few example Texas shows).
+
+### JSON feed (recommended)
+
+Set **CARD_SHOWS_FEED_URL** in `.env.local` (and in Vercel env for production) to point at a JSON feed:
+
+```bash
+CARD_SHOWS_FEED_URL=https://your-domain.com/card-shows.json
+```
+
+Expected JSON shape (example):
+
+```json
+[
+  {
+    "id": "dallas-2026-07-14",
+    "name": "Dallas Card Show",
+    "startDate": "2026-07-14T09:00:00Z",
+    "endDate": "2026-07-14T17:00:00Z",
+    "venue": "Dallas Convention Center",
+    "address": "123 Main St",
+    "city": "Dallas",
+    "state": "TX",
+    "country": "US",
+    "buyerEntryCost": "$5",
+    "vendorBoothCost": "$150",
+    "organizerName": "Dallas Card Events",
+    "organizerEmail": "info@dallascardevents.com",
+    "organizerPhone": "555-123-4567",
+    "vendorCount": 120
+  }
+]
+```
+
+Only `id`, `name`, and `startDate` are strictly required; other fields improve the detail view and filters.
+
+### Refreshing shows
+
+To refresh shows manually (and aggregate from all configured adapters), call `/api/shows/refresh` with **CRON_SECRET**:
 
 ```bash
 curl -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/shows/refresh
 ```
 
-In production use the same header with your `CRON_SECRET`. Run periodically (cron) or add more source adapters in `src/lib/show-sources/`.
+In production use the same header with your `CRON_SECRET`. Run this periodically via **Vercel Cron** or an external scheduler (see `DEPLOY.md`) so the `card_shows` table stays up to date.
 
 ## Scheduled eBay sync (Vercel Cron)
 

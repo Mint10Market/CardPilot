@@ -1,0 +1,54 @@
+[
+  {
+    "id": "dallas-2026-07-14",
+    "name": "Dallas Card Show",
+    "startDate": "2026-07-14T09:00:00Z",
+    "endDate": "2026-07-14T17:00:00Z",
+    "venue": "Dallas Convention Center",
+    "address": "123 Main St",
+    "city": "Dallas",
+    "state": "TX",
+    "country": "US",
+    "buyerEntryCost": "$5",
+    "vendorBoothCost": "$150",
+    "organizerName": "Dallas Card Events",
+    "organizerEmail": "info@dallascardevents.com",
+    "organizerPhone": "555-123-4567",
+    "vendorCount": 120
+  },
+  {
+    "id": "chicago-2026-08-10",
+    "name": "Chicago Sports & TCG Expo",
+    "startDate": "2026-08-10T10:00:00Z",
+    "endDate": "2026-08-10T18:00:00Z",
+    "venue": "McCormick Place",
+    "address": "2301 S King Dr",
+    "city": "Chicago",
+    "state": "IL",
+    "country": "US",
+    "buyerEntryCost": "$10",
+    "vendorBoothCost": "$200",
+    "organizerName": "Chicago Card Promotions",
+    "organizerEmail": "info@chicagocardexpo.com",
+    "organizerPhone": "312-555-0100",
+    "vendorCount": 180
+  },
+  {
+    "id": "atlanta-2026-09-05",
+    "name": "Atlanta Card & Collectibles Show",
+    "startDate": "2026-09-05T09:30:00Z",
+    "endDate": "2026-09-05T16:30:00Z",
+    "venue": "Georgia World Congress Center",
+    "address": "285 Andrew Young International Blvd NW",
+    "city": "Atlanta",
+    "state": "GA",
+    "country": "US",
+    "buyerEntryCost": "$8",
+    "vendorBoothCost": "$175",
+    "organizerName": "ATL Card Shows",
+    "organizerEmail": "hello@atlcardshows.com",
+    "organizerPhone": "404-555-0199",
+    "vendorCount": 95
+  }
+]
+

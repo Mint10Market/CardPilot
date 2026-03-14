@@ -3,6 +3,10 @@
     {
       "path": "/api/sync/scheduled",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/shows/refresh",
+      "schedule": "0 * * * *"
     }
   ]
 }
