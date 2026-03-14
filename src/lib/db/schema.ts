@@ -10,16 +10,17 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
-// Users keyed by eBay identity (no separate app sign-in)
+// Users: may start without eBay (app-only); connect eBay later in Settings.
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  ebayUserId: text("ebay_user_id").notNull().unique(),
+  ebayUserId: text("ebay_user_id").unique(), // null until eBay connected
   ebayUsername: text("ebay_username"),
-  accessToken: text("access_token").notNull(),
-  refreshToken: text("refresh_token").notNull(), // encrypt at application layer
-  tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }).notNull(),
+  displayName: text("display_name"), // user-chosen name (Settings)
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }),
   lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
-  lastSyncStatus: text("last_sync_status"), // "success" | "error"
+  lastSyncStatus: text("last_sync_status"),
   lastSyncCount: integer("last_sync_count"),
   lastSyncError: text("last_sync_error"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

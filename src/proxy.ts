@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const SESSION_COOKIE = "cardpilot_session";
-const PROTECTED_PREFIXES = ["/dashboard", "/sales", "/inventory", "/customers", "/shows", "/collection"];
+const PROTECTED_PREFIXES = ["/dashboard", "/sales", "/inventory", "/customers", "/shows", "/collection", "/settings"];
 
 export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -10,6 +10,7 @@ export function proxy(request: NextRequest) {
   const isAuthRoute =
     path.startsWith("/api/auth/ebay") ||
     path === "/api/auth/ebay" ||
+    path === "/api/auth/guest" ||
     path.startsWith("/api/webhooks");
   if (isAuthRoute || !isProtected) return NextResponse.next();
   const hasSession = request.cookies.has(SESSION_COOKIE);
@@ -23,5 +24,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/sales/:path*", "/inventory/:path*", "/customers/:path*", "/shows/:path*", "/collection/:path*"],
+  matcher: ["/dashboard/:path*", "/sales/:path*", "/inventory/:path*", "/customers/:path*", "/shows/:path*", "/collection/:path*", "/settings/:path*"],
 };

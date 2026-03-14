@@ -10,6 +10,7 @@ const links = [
   { href: "/customers", label: "Customers" },
   { href: "/collection", label: "Collection" },
   { href: "/shows", label: "Card Shows" },
+  { href: "/settings", label: "Settings" },
 ] as const;
 
 export function Nav() {
@@ -23,7 +24,9 @@ export function Nav() {
             ? pathname === "/dashboard"
             : href === "/collection"
               ? pathname === "/collection" || pathname.startsWith("/collection/")
-              : pathname === href;
+              : href === "/settings"
+                ? pathname === "/settings" || pathname.startsWith("/settings/")
+                : pathname === href;
         return (
           <Link
             key={href}

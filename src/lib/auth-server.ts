@@ -7,8 +7,9 @@ import { getSessionCookieName } from "@/lib/session";
 
 export type CurrentUser = {
   id: string;
-  ebayUserId: string;
+  ebayUserId: string | null;
   ebayUsername: string | null;
+  displayName: string | null;
 };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -19,13 +20,14 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   if (!session) return null;
   const user = await db.query.users.findFirst({
     where: eq(users.id, session.userId),
-    columns: { id: true, ebayUserId: true, ebayUsername: true },
+    columns: { id: true, ebayUserId: true, ebayUsername: true, displayName: true },
   });
   if (!user) return null;
   return {
     id: user.id,
-    ebayUserId: user.ebayUserId,
-    ebayUsername: user.ebayUsername,
+    ebayUserId: user.ebayUserId ?? null,
+    ebayUsername: user.ebayUsername ?? null,
+    displayName: user.displayName ?? null,
   };
 }
 

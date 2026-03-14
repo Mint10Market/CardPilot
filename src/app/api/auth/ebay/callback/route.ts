@@ -47,39 +47,64 @@ export async function GET(request: NextRequest) {
     const ebayUser = await getEbayUser(tokens.access_token);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
-    const existing = await db.query.users.findFirst({
+    const existingByEbay = await db.query.users.findFirst({
       where: eq(users.ebayUserId, ebayUser.userId),
     });
 
     let userId: string;
-    if (existing) {
+    if (existingByEbay) {
       await db
         .update(users)
         .set({
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
           tokenExpiresAt: expiresAt,
-          ebayUsername: ebayUser.username ?? existing.ebayUsername,
+          ebayUsername: ebayUser.username ?? existingByEbay.ebayUsername,
           updatedAt: new Date(),
         })
-        .where(eq(users.id, existing.id));
-      userId = existing.id;
+        .where(eq(users.id, existingByEbay.id));
+      userId = existingByEbay.id;
     } else {
-      const [inserted] = await db
-        .insert(users)
-        .values({
-          ebayUserId: ebayUser.userId,
-          ebayUsername: ebayUser.username ?? null,
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token,
-          tokenExpiresAt: expiresAt,
-        })
-        .returning({ id: users.id });
-      if (!inserted) {
-        logger.error("eBay callback: user insert returned no row");
-        return NextResponse.redirect(`${url}/?error=auth_failed`);
+      const sessionToken = cookieStore.get(getSessionCookieName())?.value;
+      const { verifySession } = await import("@/lib/session");
+      const session = sessionToken ? await verifySession(sessionToken) : null;
+      const existingAppUser =
+        session &&
+        (await db.query.users.findFirst({
+          where: eq(users.id, session.userId),
+          columns: { id: true, ebayUserId: true },
+        }));
+
+      if (existingAppUser && existingAppUser.ebayUserId == null) {
+        await db
+          .update(users)
+          .set({
+            ebayUserId: ebayUser.userId,
+            ebayUsername: ebayUser.username ?? null,
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token,
+            tokenExpiresAt: expiresAt,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, existingAppUser.id));
+        userId = existingAppUser.id;
+      } else {
+        const [inserted] = await db
+          .insert(users)
+          .values({
+            ebayUserId: ebayUser.userId,
+            ebayUsername: ebayUser.username ?? null,
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token,
+            tokenExpiresAt: expiresAt,
+          })
+          .returning({ id: users.id });
+        if (!inserted) {
+          logger.error("eBay callback: user insert returned no row");
+          return NextResponse.redirect(`${url}/?error=auth_failed`);
+        }
+        userId = inserted.id;
       }
-      userId = inserted.id;
     }
 
     const token = await createSession({ userId, ebayUserId: ebayUser.userId });

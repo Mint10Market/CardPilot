@@ -31,12 +31,20 @@ export default async function HomePage({
             Go to Dashboard
           </Link>
         ) : (
-          <a
-            href="/api/auth/ebay"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] px-6 font-medium hover:opacity-90 transition-opacity"
-          >
-            Connect with eBay
-          </a>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <a
+              href="/api/auth/ebay"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] px-6 font-medium hover:opacity-90 transition-opacity"
+            >
+              Connect with eBay
+            </a>
+            <a
+              href="/api/auth/guest"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] px-6 font-medium hover:border-[var(--muted)] transition-colors"
+            >
+              Continue without connecting
+            </a>
+          </div>
         )}
       </div>
     </div>

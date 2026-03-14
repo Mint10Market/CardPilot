@@ -2,7 +2,7 @@
 
 Do these in order. All commands from the project root: `"Card Pilot"`.
 
-**Before pushing:** Run `npm run check` (lint + build) locally. To test like production: `npm run build && npm run start` then open http://localhost:3000.
+**Before pushing:** Run `npm run check` (lint + build) locally. Optionally run `npm run verify:secrets` (see SECURITY.md). To test like production: `npm run build && npm run start` then open http://localhost:3000.
 
 ---
 

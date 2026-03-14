@@ -7,10 +7,22 @@ import { getValidAccessToken } from "./ebay-sync";
 const EBAY_INVENTORY_BASE = "https://api.ebay.com/sell/inventory/v1";
 const EBAY_SANDBOX_INVENTORY_BASE = "https://api.sandbox.ebay.com/sell/inventory/v1";
 
+/** eBay Inventory API requires a valid Accept-Language (e.g. en-US). */
+const EBAY_INVENTORY_HEADERS = {
+  "Accept-Language": "en-US",
+} as const;
+
 function getInventoryBase(): string {
   return process.env.EBAY_ENVIRONMENT === "sandbox"
     ? EBAY_SANDBOX_INVENTORY_BASE
     : EBAY_INVENTORY_BASE;
+}
+
+function inventoryHeaders(accessToken: string): Record<string, string> {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    ...EBAY_INVENTORY_HEADERS,
+  };
 }
 
 type InventoryItemsResponse = {
@@ -57,7 +69,7 @@ async function fetchInventoryItemSkus(
   const base = getInventoryBase();
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
   const res = await fetch(`${base}/inventory_item?${params}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: inventoryHeaders(accessToken),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -76,7 +88,7 @@ async function fetchInventoryItem(
 ): Promise<InventoryItemDetail | null> {
   const base = getInventoryBase();
   const res = await fetch(`${base}/inventory_item/${encodeURIComponent(sku)}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: inventoryHeaders(accessToken),
   });
   if (res.status === 404) return null;
   if (!res.ok) {
@@ -93,7 +105,7 @@ async function fetchOffersForSku(
   const base = getInventoryBase();
   const params = new URLSearchParams({ sku });
   const res = await fetch(`${base}/offer?${params}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: inventoryHeaders(accessToken),
   });
   if (res.status === 404) return null;
   if (!res.ok) {

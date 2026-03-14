@@ -81,21 +81,52 @@ export default async function DashboardPage() {
     <AppShell title="Dashboard">
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
-          <span
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--success)] bg-[var(--success)]/10 px-3 py-1.5 text-sm font-medium text-[var(--success)]"
-            aria-label="eBay connection status"
+          {user.ebayUserId ? (
+            <>
+              <span
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--success)] bg-[var(--success)]/10 px-3 py-1.5 text-sm font-medium text-[var(--success)]"
+                aria-label="eBay connection status"
+              >
+                <span className="h-2 w-2 rounded-full bg-[var(--success)]" aria-hidden />
+                Connected with eBay
+              </span>
+              <SyncButton />
+            </>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--muted)] bg-[var(--muted)]/10 px-3 py-1.5 text-sm font-medium text-[var(--muted)]">
+              <span className="h-2 w-2 rounded-full bg-[var(--muted)]" aria-hidden />
+              eBay not connected
+            </span>
+          )}
+          <Link
+            href="/settings"
+            className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
           >
-            <span className="h-2 w-2 rounded-full bg-[var(--success)]" aria-hidden />
-            Connected with eBay
-          </span>
-          <SyncButton />
+            Settings
+          </Link>
         </div>
         <span className="text-sm text-[var(--muted)]">
-          {user.ebayUsername || user.ebayUserId}
+          {user.displayName || user.ebayUsername || user.ebayUserId || "Account"}
         </span>
       </div>
 
-      {isEmpty && (
+      {!user.ebayUserId && (
+        <Card className="mb-6 p-6">
+          <p className="text-[var(--foreground)] mb-3">
+            Connect eBay in Settings to sync sales and inventory, or get started by importing your collection.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <LinkButton href="/settings" variant="primary">
+              Connect eBay
+            </LinkButton>
+            <LinkButton href="/collection" variant="secondary">
+              Import collection
+            </LinkButton>
+          </div>
+        </Card>
+      )}
+
+      {user.ebayUserId && isEmpty && (
         <Card className="mb-6 p-6">
           <p className="text-[var(--foreground)] mb-3">
             Get started by syncing your eBay sales or importing your collection.

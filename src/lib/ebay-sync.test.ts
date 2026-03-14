@@ -91,6 +91,16 @@ describe("getValidAccessToken", () => {
     await expect(getValidAccessToken("missing")).rejects.toThrow("User not found");
     expect(mockRefresh).not.toHaveBeenCalled();
   });
+
+  it("throws when user has not connected eBay", async () => {
+    mockFindFirst.mockResolvedValue({
+      accessToken: null,
+      tokenExpiresAt: null,
+      refreshToken: null,
+    });
+    await expect(getValidAccessToken("user-1")).rejects.toThrow("eBay not connected");
+    expect(mockRefresh).not.toHaveBeenCalled();
+  });
 });
 
 describe("syncOrdersForUser", () => {

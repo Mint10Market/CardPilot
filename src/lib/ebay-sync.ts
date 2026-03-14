@@ -19,13 +19,16 @@ function getFulfillmentBase(): string {
 
 const FIVE_MINUTES_MS = 60 * 5 * 1000;
 
-/** Exported for use by ebay-inventory-sync. */
+/** Exported for use by ebay-inventory-sync. Throws if user has not connected eBay. */
 export async function getValidAccessToken(userId: string): Promise<string> {
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
     columns: { accessToken: true, tokenExpiresAt: true, refreshToken: true },
   });
   if (!user) throw new Error("User not found");
+  if (!user.accessToken || !user.refreshToken || !user.tokenExpiresAt) {
+    throw new Error("eBay not connected. Connect your eBay account in Settings.");
+  }
   const expiresAt = new Date(user.tokenExpiresAt).getTime();
   const now = Date.now();
   const isValidExpiry = Number.isFinite(expiresAt) && expiresAt > now + FIVE_MINUTES_MS;

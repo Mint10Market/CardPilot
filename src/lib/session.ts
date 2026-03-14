@@ -5,7 +5,7 @@ const DEFAULT_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 export type SessionPayload = {
   userId: string;
-  ebayUserId: string;
+  ebayUserId: string | null;
   exp: number;
 };
 
@@ -29,11 +29,11 @@ export async function verifySession(token: string): Promise<SessionPayload | nul
   try {
     const secret = getSecret();
     const { payload } = await jwtVerify(token, secret);
-    if (!payload.userId || !payload.ebayUserId || !payload.exp) return null;
+    if (!payload.userId || payload.ebayUserId === undefined || !payload.exp) return null;
     if (payload.exp < Date.now() / 1000) return null;
     return {
       userId: payload.userId as string,
-      ebayUserId: payload.ebayUserId as string,
+      ebayUserId: payload.ebayUserId as string | null,
       exp: payload.exp as number,
     };
   } catch {
