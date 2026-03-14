@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 type Transaction = {
@@ -27,21 +27,26 @@ export function TransactionsList() {
   const [showMoreFields, setShowMoreFields] = useState(false);
   const limit = 20;
 
-  const load = () => {
-    setLoading(true);
+  const load = useCallback(() => {
     const params = new URLSearchParams({ limit: String(limit), offset: String(page * limit) });
     if (sport) params.set("sport", sport);
     if (status) params.set("status", status);
-    fetch(`/api/collection/transactions?${params}`)
+    return fetch(`/api/collection/transactions?${params}`)
       .then((r) => r.json())
       .then((d) => (d.items ? setData({ items: d.items, total: d.total, limit: d.limit, offset: d.offset }) : setData(null)))
-      .catch(() => setData(null))
-      .then(() => setLoading(false), () => setLoading(false));
-  };
+      .catch(() => setData(null));
+  }, [page, sport, status]);
 
   useEffect(() => {
-    load();
-  }, [page, sport, status]);
+    let cancelled = false;
+    queueMicrotask(() => setLoading(true));
+    load().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
 
   const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

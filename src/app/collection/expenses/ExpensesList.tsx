@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { EXPENSE_CATEGORIES } from "@/lib/collection-calc";
 
@@ -18,17 +18,23 @@ export function ExpensesList() {
   const [category, setCategory] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
-  const load = () =>
-    fetch(`/api/collection/expenses${category ? `?category=${encodeURIComponent(category)}` : ""}`)
+  const load = useCallback(() => {
+    return fetch(`/api/collection/expenses${category ? `?category=${encodeURIComponent(category)}` : ""}`)
       .then((r) => r.json())
       .then(setList)
-      .catch(() => setList([]))
-      .then(() => setLoading(false), () => setLoading(false));
+      .catch(() => setList([]));
+  }, [category]);
 
   useEffect(() => {
-    setLoading(true);
-    load();
-  }, [category]);
+    let cancelled = false;
+    queueMicrotask(() => setLoading(true));
+    load().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
 
   const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

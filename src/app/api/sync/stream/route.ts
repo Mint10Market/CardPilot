@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth-server";
 import { syncOrdersForUser, type SyncProgressEvent } from "@/lib/ebay-sync";
 import { handleApiError } from "@/lib/api-response";

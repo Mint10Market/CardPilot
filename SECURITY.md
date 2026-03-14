@@ -1,5 +1,9 @@
 # Security
 
+## Verify `.env.local` is not tracked
+
+Run: `git check-ignore -v .env.local` (should show a .gitignore rule) and `git ls-files .env.local` (should output nothing). Do not use `git add -f .env.local`; that would commit secrets.
+
 ## If `.env.local` or any secrets were committed
 
 **`.env.local` must never be committed.** It is listed in `.gitignore` (`.env*` and `.env*.local`). If it or any file containing real database passwords, eBay OAuth credentials, webhook tokens, session secrets, or Vercel OIDC tokens was ever committed, **treat all those secrets as compromised**.

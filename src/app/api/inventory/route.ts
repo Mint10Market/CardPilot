@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth-server";
 import { db } from "@/lib/db";
 import { inventoryItems } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const user = await requireUser();
     const list = await db.query.inventoryItems.findMany({

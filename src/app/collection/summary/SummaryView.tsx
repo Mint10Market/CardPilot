@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { EXPENSE_CATEGORIES } from "@/lib/collection-calc";
 
@@ -25,15 +25,24 @@ export function SummaryView() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [view, setView] = useState<"year" | "rolling">("year");
 
-  useEffect(() => {
-    setLoading(true);
+  const load = useCallback(() => {
     const params = view === "rolling" ? "?rolling=3" : `?year=${year}`;
-    fetch(`/api/collection/summary${params}`)
+    return fetch(`/api/collection/summary${params}`)
       .then((r) => r.json())
       .then(setSummary)
-      .catch(() => setSummary(null))
-      .then(() => setLoading(false), () => setLoading(false));
+      .catch(() => setSummary(null));
   }, [year, view]);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => setLoading(true));
+    load().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
 
   if (loading && !summary) return <p className="text-[var(--muted)]">Loading…</p>;
 

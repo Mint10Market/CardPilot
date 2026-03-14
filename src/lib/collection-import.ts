@@ -7,7 +7,6 @@ import * as XLSX from "xlsx";
 
 const CARD_SHEETS = ["Card Transactions", "Card transactions", "card transactions"];
 const EXPENSES_SHEET = "Expenses";
-const DROPDOWNS_SHEETS = ["Charts, Formulas & Drop-Downs", "Charts, Formulas & Drop-Downs"];
 const SALES_TAX_SHEET = "Sales Tax";
 
 /** Excel serial date to ISO date string (UTC day). */

@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated / vendor – do not lint
+    "node_modules/**",
+    ".trigger/**",
   ]),
 ]);
 

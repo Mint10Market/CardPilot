@@ -68,6 +68,20 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) (local) or [https://card-pilot.vercel.app](https://card-pilot.vercel.app) (production). Click **Connect with eBay** to sign in. After connecting, use **Sync from eBay** on the dashboard to pull orders and customers.
 
+### OneDrive / cloud-synced folders
+
+If the project lives in OneDrive (or iCloud, Dropbox, etc.), `npm run lint` and `npm run build` can hit `ETIMEDOUT` because the sync layer slows disk reads. Fix: keep the repo in the cloud folder but put **node_modules** on local disk via a symlink (`.next` stays in the project so the build works):
+
+```bash
+chmod +x scripts/setup-local-symlinks.sh
+./scripts/setup-local-symlinks.sh
+npm install
+npm run lint
+npm run build
+```
+
+This links `node_modules` to `~/.local-dev/card-pilot/node_modules` so dependency I/O is local; your source and `.next` stay in OneDrive.
+
 ## Card shows data
 
 Card shows are stored in the `card_shows` table and populated by `/api/shows/refresh` from one or more **show source adapters** in `src/lib/show-sources/`:

@@ -190,7 +190,7 @@ export function TransactionEditForm({ transaction: t }: { transaction: Transacti
               <input name="attributes" defaultValue={t.attributes ?? ""} className={inputClass} />
             </div>
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">#'d to</label>
+              <label className="block text-xs text-[var(--muted)] mb-1">#&apos;d to</label>
               <input name="numberedTo" defaultValue={t.numberedTo ?? ""} className={inputClass} />
             </div>
             <div>

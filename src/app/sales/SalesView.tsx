@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 
 type LineItem = { title?: string; quantity?: number; price?: string; sku?: string };
@@ -40,7 +40,6 @@ type ManualRow = {
   notes?: string | null;
   lineItems?: LineItem[];
 };
-type SaleRow = OrderRow | ManualRow;
 type TableRow =
   | { type: "eBay"; date: string; amount: string; id: string; extra?: string; record: OrderRow }
   | { type: "Manual"; date: string; amount: string; id: string; record: ManualRow };
@@ -294,20 +293,26 @@ export function SalesView() {
   const [showManual, setShowManual] = useState(false);
   const [breakdownRow, setBreakdownRow] = useState<TableRow | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     const params = new URLSearchParams();
     if (from) params.set("from", from);
     if (to) params.set("to", to);
-    fetch(`/api/sales?${params}`)
+    return fetch(`/api/sales?${params}`)
       .then((r) => r.json())
       .then(setData)
-      .catch(() => setData(null))
-      .then(() => setLoading(false), () => setLoading(false));
-  };
+      .catch(() => setData(null));
+  }, [from, to]);
 
   useEffect(() => {
-    load();
-  }, [from, to]);
+    let cancelled = false;
+    queueMicrotask(() => setLoading(true));
+    load().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
 
   const handleManualSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
