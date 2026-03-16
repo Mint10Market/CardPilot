@@ -4,6 +4,8 @@ Do these in order. All commands from the project root: `"Card Pilot"`.
 
 **Before pushing:** Run `npm run check` (lint + build) locally. Optionally run `npm run verify:secrets` (see SECURITY.md). To test like production: `npm run build && npm run start` then open http://localhost:3000.
 
+**Keeping Vercel, Supabase, GitHub, and Cursor in sync:** See **ALIGNMENT.md**. In short: set `DATABASE_URL` in `.env.local` to the same value as Vercel Production; then Cursor can run migrations and keep the DB aligned. Run `npm run align:check` to verify.
+
 ---
 
 ## Do it all in one go (after one-time setup)
