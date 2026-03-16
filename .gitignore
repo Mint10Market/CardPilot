@@ -44,7 +44,7 @@ yarn-error.log*
 # vercel
 .vercel
 
-# Trigger.dev local build cache
+# Trigger.dev local build cache (contains project ref in build.json — never commit)
 .trigger
 
 # typescript

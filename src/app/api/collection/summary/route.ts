@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
         sellingFees,
         expensesByCategory,
         totalExpenses,
-        trueProfit: sales - cogs - totalExpenses,
+        trueProfit: sales - cogs - sellingFees - totalExpenses,
       });
     }
 

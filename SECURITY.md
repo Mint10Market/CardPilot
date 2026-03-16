@@ -20,3 +20,4 @@
 4. **Scheduled jobs:** Set a new `CRON_SECRET` in Vercel and in Trigger.dev (Environment Variables). Redeploy Trigger.dev tasks if needed.
 5. **Remove secrets from git history** if the repo is shared or public (e.g. BFG Repo-Cleaner or `git filter-repo` to remove the file from history). Anyone who cloned the repo before the fix must treat credentials as compromised; rotating is still required.
 6. **Never commit** `.env.local` or real values in `.env.example`. Use placeholders only in `.env.example`; keep real values only in env vars (Vercel, Trigger.dev) or local `.env.local` (gitignored).
+7. **Never commit** the `.trigger/` directory (Trigger.dev local build cache). It is in `.gitignore`; it contains your Trigger.dev project ref in `build.json`. Do not run `git add -f .trigger`.

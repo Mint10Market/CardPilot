@@ -25,6 +25,11 @@ function n(val: string | number | null | undefined): number {
   return Number.isFinite(x) ? x : 0;
 }
 
+/** Round to 2 decimal places (currency). Matches eBay fee rounding. */
+function roundTo2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 export interface CardTransactionInputs {
   purcDate?: string | Date | null;
   purcSource?: string | null;
@@ -129,17 +134,31 @@ export function computeCardTransaction(
       ? totalCostVal / 0.971 + 0.3
       : null;
 
-  // Selling Fees (when sell price present)
+  // Selling Fees (when sell price present) — exact eBay math, no estimations.
+  // Fee base = order total (item + shipping). Each component rounded to 2 decimals then summed.
   let sellingFees: number | null = null;
   if (sellPrice > 0) {
-    const stateRate = getStateTaxRate(row.stateSold ?? null, stateTaxRates);
     const shipCharge = sellPrice >= 20 ? shipOver20 : shipUnder20;
-    const ebayPart = (sellPrice + shipCharge) * (1 + stateRate) * 0.135 + 0.3;
+    const feeBase = roundTo2(sellPrice + shipCharge);
+
+    const finalValueRate = 0.1235;
+    const topRatedSellerDiscountRate = 0.1;
+    const fvfFixedPerOrder = 0.3;
+    const promotedListingRate = 0.05;
+
+    const fvfGross = roundTo2(feeBase * finalValueRate);
+    const trsDiscount = roundTo2(fvfGross * topRatedSellerDiscountRate);
+    const fvfNet = roundTo2(fvfGross - trsDiscount);
+    const transactionFees = roundTo2(fvfNet + fvfFixedPerOrder);
+
+    const adFee = roundTo2(feeBase * promotedListingRate);
+    const ebayPart = roundTo2(transactionFees + adFee);
+
     const gsPart =
       isSold && (row.feeType ?? "").toLowerCase().includes("g&s")
-        ? 0.029 * sellPrice + 0.3
+        ? roundTo2(roundTo2(0.029 * sellPrice) + 0.3)
         : 0;
-    sellingFees = ebayPart + gsPart;
+    sellingFees = roundTo2(ebayPart + gsPart);
   }
 
   // Profit $ and %
