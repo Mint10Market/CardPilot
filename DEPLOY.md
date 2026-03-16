@@ -143,6 +143,7 @@ Vercel Hobby does not support Cron. Use **Trigger.dev** (free tier) so eBay sync
 1. In Vercel → Project → **Settings → Environment Variables**, set:
    - `NEXT_PUBLIC_APP_URL` = `https://card-pilot.vercel.app`
    - `EBAY_REDIRECT_URI` = `https://card-pilot.vercel.app/api/auth/ebay/callback`
+   - `SESSION_SECRET` = a long random string (**at least 32 characters**). Guest sign-in and eBay callback need this. Generate with: `openssl rand -hex 32`
 2. In **eBay Developer Portal** → your app → OAuth / RuName, add this redirect URI:  
    `https://card-pilot.vercel.app/api/auth/ebay/callback`
 3. (Optional) Run DB migrations if needed:  
@@ -174,3 +175,11 @@ If Vercel lists deployments as **Error** (red), the build is failing. Deploys ar
 ## Vercel MCP in Cursor
 
 Vercel MCP is configured in `.cursor/mcp.json`. After adding it, Cursor may show “Needs login” for Vercel; use that to authorize. You can then use Vercel MCP to list projects, inspect deployments, and view logs. Creating new deployments is still done via CLI or Git push as above.
+
+---
+
+## Supabase and migrations from Cursor
+
+**Option 1 – Drizzle CLI (recommended):** Put your Supabase **pooler** URL in `.env.local` as `DATABASE_URL` (same as in Vercel). Then you or the AI can run `npm run db:migrate` from the project root; it will apply all pending migrations in `drizzle/` to that database. Say e.g. "run the migrations" and the AI will run that command.
+
+**Option 2 – Supabase MCP:** Supabase is added in `.cursor/mcp.json`. Restart Cursor, then go to **Settings → Tools & MCP** and authorize Supabase when prompted (browser login). The AI can then use Supabase tools to list tables, run SQL, or apply migration SQL from `drizzle/` via `execute_sql`. To limit access to one project, set the URL to `https://mcp.supabase.com/mcp?project_ref=YOUR_PROJECT_REF` (get the ref from your Supabase dashboard URL or project Settings).
