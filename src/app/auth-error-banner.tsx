@@ -17,6 +17,10 @@ const MESSAGES: Record<string, { title: string; body: string }> = {
     title: "No authorization code received",
     body: "eBay didn’t return a code. Try connecting again or confirm your eBay app redirect URI matches the callback URL above.",
   },
+  config: {
+    title: "Guest sign-in not available",
+    body: "The database needs a migration so app-only (guest) users can be created. See the message below for how to fix.",
+  },
 };
 
 export function AuthErrorBanner({ error, detail }: { error: string; detail?: string }) {

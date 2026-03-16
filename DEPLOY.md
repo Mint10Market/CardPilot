@@ -146,7 +146,8 @@ Vercel Hobby does not support Cron. Use **Trigger.dev** (free tier) so eBay sync
 2. In **eBay Developer Portal** → your app → OAuth / RuName, add this redirect URI:  
    `https://card-pilot.vercel.app/api/auth/ebay/callback`
 3. (Optional) Run DB migrations if needed:  
-   `DATABASE_URL=your_supabase_url npm run db:push`
+   `DATABASE_URL=your_supabase_url npm run db:migrate`  
+   (or `npm run db:push` if you use push). **Guest sign-in (“Continue without connecting”) requires migration `0005_users_optional_ebay_display_name.sql`**; without it, `/api/auth/guest` returns 500.
 
 ---
 
