@@ -36,6 +36,13 @@
       "when": 1773100000000,
       "tag": "0004_card_shows_cost_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773709975866,
+      "tag": "0005_personal_collection_items",
+      "breakpoints": true
     }
   ]
 }
