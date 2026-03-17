@@ -5,8 +5,9 @@
 
 import { db } from "@/lib/db";
 import { users, orders, customers } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { refreshEbayAccessToken } from "./ebay-auth";
+import { getOrdersFees } from "./ebay-trading";
 
 const EBAY_FULFILLMENT_BASE = "https://api.ebay.com/sell/fulfillment/v1";
 const EBAY_SANDBOX_FULFILLMENT_BASE = "https://api.sandbox.ebay.com/sell/fulfillment/v1";
@@ -147,6 +148,7 @@ export async function syncOrdersForUser(
   let count = 0;
   let offset = 0;
   const limit = 50;
+  const syncedOrderIds: string[] = [];
 
   while (true) {
     const params = new URLSearchParams({
@@ -213,6 +215,7 @@ export async function syncOrdersForUser(
           },
         });
       count++;
+      syncedOrderIds.push(o.orderId);
       onProgress?.({ type: "order", orderId: o.orderId, totalAmount, totalSoFar: count });
       const identifier = o.buyer?.username ?? o.buyer?.buyerUserId ?? null;
       if (identifier) {
@@ -231,6 +234,26 @@ export async function syncOrdersForUser(
     if (list.length < limit) break;
     offset += limit;
   }
+
+  if (syncedOrderIds.length > 0) {
+    try {
+      const feesResults = await getOrdersFees(accessToken, syncedOrderIds);
+      for (const { orderId, totalFees } of feesResults) {
+        await db
+          .update(orders)
+          .set({
+            fees: String(totalFees.toFixed(2)),
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(orders.userId, userId), eq(orders.ebayOrderId, orderId))
+          );
+      }
+    } catch {
+      // Do not overwrite existing orders.fees on Trading API failure; estimation remains fallback.
+    }
+  }
+
   onProgress?.({ type: "done", count });
   return { count };
 }

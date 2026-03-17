@@ -9,6 +9,8 @@ const EBAY_SANDBOX_TOKEN = "https://api.sandbox.ebay.com/identity/v1/oauth2/toke
 const EBAY_PROD_TOKEN = "https://api.ebay.com/identity/v1/oauth2/token";
 
 // Scopes: identity (user id), Sell API fulfillment, inventory, account.
+// The same token is used for Trading API (e.g. GetOrders with IncludeFinalValueFee for exact fees).
+// If Trading API returns a scope error, add the Trading scope and have users re-connect eBay.
 const DEFAULT_SCOPES = [
   "https://api.ebay.com/oauth/api_scope",
   "https://api.ebay.com/oauth/api_scope/commerce.identity.readonly",
