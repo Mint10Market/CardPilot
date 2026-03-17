@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { computeOrderDeductions, computePeriodTotals } from "@/lib/sales-calc";
 
 type LineItem = { title?: string; quantity?: number; price?: string; sku?: string };
 /** eBay raw order: pricingSummary (what buyer paid) and lineItems with lineItemCost */
@@ -62,17 +63,19 @@ function TransactionBreakdownModal({
   if (row.type === "eBay") {
     const o = row.record;
     const raw = o.rawPayload;
-    // Use eBay API breakdown when available (matches "What your buyer paid")
+    const orderTotalRaw = raw?.pricingSummary?.total?.value ?? "";
+    const orderTotal = orderTotalRaw ? parseFloat(orderTotalRaw) : parseFloat(String(o.totalAmount ?? 0));
+    const shippingChargedToBuyer = raw?.pricingSummary?.deliveryCost?.value != null ? parseFloat(raw.pricingSummary.deliveryCost.value) : 0;
+    const deduction = computeOrderDeductions({
+      orderTotal,
+      fees: o.fees,
+      shippingCost: o.shippingCost,
+      useFeeEstimate: true,
+      shippingChargedToBuyer,
+    });
     const priceSubtotal = raw?.pricingSummary?.priceSubtotal?.value ?? "";
     const deliveryCost = raw?.pricingSummary?.deliveryCost?.value ?? "";
     const tax = raw?.pricingSummary?.tax?.value ?? "";
-    const feeFromRaw = raw?.pricingSummary?.fee?.value ?? "";
-    const orderTotalRaw = raw?.pricingSummary?.total?.value ?? "";
-    const orderTotal = orderTotalRaw ? parseFloat(orderTotalRaw) : parseFloat(String(o.totalAmount ?? 0));
-    const feesAmount = o.fees != null && o.fees !== "" ? parseFloat(String(o.fees)) : feeFromRaw ? parseFloat(feeFromRaw) : null;
-    const shippingAmount = o.shippingCost != null && o.shippingCost !== "" ? parseFloat(String(o.shippingCost)) : null;
-    const totalDeductions = (feesAmount ?? 0) + (shippingAmount ?? 0);
-    const netAfterDeductions = totalDeductions > 0 ? orderTotal - totalDeductions : null;
 
     // Line items: prefer raw lineItemCost so item price is correct
     const rawLineItems = raw?.lineItems ?? [];
@@ -138,7 +141,7 @@ function TransactionBreakdownModal({
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-[var(--foreground)] mb-2">What your buyer paid</p>
+              <p className="text-sm font-medium text-[var(--foreground)] mb-2">Revenue (what the buyer paid)</p>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-[var(--muted)]">
@@ -186,30 +189,30 @@ function TransactionBreakdownModal({
             </div>
             <div className="border-t border-[var(--border)] pt-3 space-y-1 text-sm">
               <p className="text-sm font-medium text-[var(--foreground)] mb-2">Deductions</p>
-              {feesAmount != null && feesAmount !== 0 && (
-                <div className="flex justify-between text-[var(--muted)]">
-                  <span>eBay fees</span>
-                  <span>−${fmtMoney(feesAmount)}</span>
-                </div>
-              )}
-              {shippingAmount != null && shippingAmount !== 0 && (
-                <div className="flex justify-between text-[var(--muted)]">
-                  <span>Shipping cost (your expense)</span>
-                  <span>−${fmtMoney(shippingAmount)}</span>
-                </div>
-              )}
+              <div className="flex justify-between text-[var(--muted)]">
+                <span>{deduction.feesIsEstimated ? "eBay fees (est.)" : "eBay fees"}</span>
+                <span>−${fmtMoney(deduction.fees)}</span>
+              </div>
+              <div className="flex justify-between text-[var(--muted)]">
+                <span>Shipping cost (your expense)</span>
+                <span>{deduction.shippingCost > 0 ? `−$${fmtMoney(deduction.shippingCost)}` : "—"}</span>
+              </div>
               <div className="flex justify-between text-[var(--muted)]">
                 <span>Cost of card</span>
-                <span>—</span>
+                <span>{deduction.costOfCard > 0 ? `−$${fmtMoney(deduction.costOfCard)}` : "—"}</span>
               </div>
-              {netAfterDeductions != null && (
-                <div className="flex justify-between font-semibold text-[var(--foreground)] pt-1">
-                  <span>Net (after fees &amp; shipping)</span>
-                  <span>${fmtMoney(netAfterDeductions)}</span>
-                </div>
-              )}
-              <p className="text-xs text-[var(--muted)] pt-2 border-t border-[var(--border)] mt-2">
-                Profit = Order total − eBay fees − shipping cost − cost of card. Add cost of card in Collection to see profit here.
+              <div className="flex justify-between font-medium text-[var(--foreground)] pt-1">
+                <span>Total deductions</span>
+                <span>−${fmtMoney(deduction.totalDeductions)}</span>
+              </div>
+            </div>
+            <div className="border-t border-[var(--border)] pt-3 text-sm">
+              <div className="flex justify-between font-semibold text-[var(--foreground)]">
+                <span>Net</span>
+                <span>${fmtMoney(deduction.net)}</span>
+              </div>
+              <p className="text-xs text-[var(--muted)] pt-2 mt-1">
+                Net = Order total − Total deductions. Profit = Net when cost of card is included above.
               </p>
             </div>
           </div>
@@ -321,6 +324,14 @@ export function SalesView() {
     orders: OrderRow[];
     manualSales: ManualRow[];
     totalRevenue: number;
+    periodTotals?: {
+      totalRevenue: number;
+      totalFees: number;
+      totalShippingCost: number;
+      totalCostOfCard: number;
+      totalDeductions: number;
+      totalNet: number;
+    };
     error?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -335,16 +346,31 @@ export function SalesView() {
       .then((r) => r.json().then((body) => ({ ok: r.ok, body })))
       .then(({ ok, body }) => {
         if (!ok || body?.error) {
-          setData({ orders: [], manualSales: [], totalRevenue: 0, error: body?.error ?? "Failed to load sales" });
+          setData({
+            orders: [],
+            manualSales: [],
+            totalRevenue: 0,
+            periodTotals: { totalRevenue: 0, totalFees: 0, totalShippingCost: 0, totalCostOfCard: 0, totalDeductions: 0, totalNet: 0 },
+            error: body?.error ?? "Failed to load sales",
+          });
           return;
         }
         setData({
           orders: Array.isArray(body.orders) ? body.orders : [],
           manualSales: Array.isArray(body.manualSales) ? body.manualSales : [],
           totalRevenue: typeof body.totalRevenue === "number" ? body.totalRevenue : 0,
+          periodTotals: body.periodTotals ?? undefined,
         });
       })
-      .catch(() => setData({ orders: [], manualSales: [], totalRevenue: 0, error: "Network error" }));
+      .catch(() =>
+        setData({
+          orders: [],
+          manualSales: [],
+          totalRevenue: 0,
+          periodTotals: { totalRevenue: 0, totalFees: 0, totalShippingCost: 0, totalCostOfCard: 0, totalDeductions: 0, totalNet: 0 },
+          error: "Network error",
+        })
+      );
   }, [from, to]);
 
   useEffect(() => {
@@ -390,7 +416,8 @@ export function SalesView() {
 
   const orders = Array.isArray(data.orders) ? data.orders : [];
   const manualSales = Array.isArray(data.manualSales) ? data.manualSales : [];
-  const totalRevenue = typeof data.totalRevenue === "number" ? data.totalRevenue : 0;
+  const periodTotals =
+    data.periodTotals ?? computePeriodTotals(orders, manualSales);
 
   const all: TableRow[] = [
     ...orders.map((o): TableRow => ({
@@ -409,19 +436,6 @@ export function SalesView() {
       record: m,
     })),
   ].sort((a, b) => (b.date > a.date ? 1 : -1));
-
-  const totalFees = all.reduce((sum, row) => {
-    if (row.type !== "eBay") return sum;
-    const f = row.record.fees;
-    return sum + (f != null && f !== "" ? parseFloat(f) : 0);
-  }, 0);
-  const totalShipping = all.reduce((sum, row) => {
-    if (row.type !== "eBay") return sum;
-    const s = row.record.shippingCost;
-    return sum + (s != null && s !== "" ? parseFloat(s) : 0);
-  }, 0);
-  const totalDeductions = totalFees + totalShipping;
-  const totalNet = totalRevenue - totalDeductions;
 
   return (
     <div className="space-y-4">
@@ -475,25 +489,25 @@ export function SalesView() {
       )}
       <Card className="space-y-1">
         <p className="text-lg font-medium text-[var(--foreground)]">
-          Total revenue (period): ${totalRevenue.toFixed(2)}
+          Total revenue (period): ${periodTotals.totalRevenue.toFixed(2)}
         </p>
-        {(totalFees > 0 || totalShipping > 0) && (
-          <>
-            {totalFees > 0 && (
-              <p className="text-sm text-[var(--muted)]">
-                Total eBay fees: −${totalFees.toFixed(2)}
-              </p>
-            )}
-            {totalShipping > 0 && (
-              <p className="text-sm text-[var(--muted)]">
-                Total shipping cost: −${totalShipping.toFixed(2)}
-              </p>
-            )}
-            <p className="text-lg font-medium text-[var(--foreground)]">
-              Net after fees &amp; shipping: ${totalNet.toFixed(2)}
-            </p>
-          </>
+        <p className="text-sm text-[var(--muted)]">
+          Total eBay fees: −${periodTotals.totalFees.toFixed(2)}
+        </p>
+        <p className="text-sm text-[var(--muted)]">
+          Total shipping cost: −${periodTotals.totalShippingCost.toFixed(2)}
+        </p>
+        {periodTotals.totalCostOfCard > 0 && (
+          <p className="text-sm text-[var(--muted)]">
+            Total cost of card: −${periodTotals.totalCostOfCard.toFixed(2)}
+          </p>
         )}
+        <p className="text-sm font-medium text-[var(--foreground)]">
+          Total deductions: −${periodTotals.totalDeductions.toFixed(2)}
+        </p>
+        <p className="text-lg font-medium text-[var(--foreground)]">
+          Net (after deductions): ${periodTotals.totalNet.toFixed(2)}
+        </p>
       </Card>
       <Card className="overflow-hidden p-0">
         <table className="w-full text-left text-sm">
@@ -501,9 +515,10 @@ export function SalesView() {
             <tr className="border-b border-[var(--border)] bg-[var(--table-header)]">
               <th className="p-3 font-medium">Date</th>
               <th className="p-3 font-medium">Type</th>
-              <th className="p-3 font-medium">Amount</th>
-              <th className="p-3 font-medium">Fees</th>
+              <th className="p-3 font-medium">Revenue</th>
+              <th className="p-3 font-medium">eBay fees</th>
               <th className="p-3 font-medium">Shipping</th>
+              <th className="p-3 font-medium">Deductions</th>
               <th className="p-3 font-medium">Net</th>
               <th className="p-3 font-medium">Note</th>
             </tr>
@@ -511,17 +526,23 @@ export function SalesView() {
           <tbody>
             {all.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-4 text-[var(--muted)]">No sales in this period.</td>
+                <td colSpan={8} className="p-4 text-[var(--muted)]">No sales in this period.</td>
               </tr>
             ) : (
               all.map((row) => {
-                const fees = row.type === "eBay" ? row.record.fees : null;
-                const shipping = row.type === "eBay" ? row.record.shippingCost : null;
                 const amountNum = parseFloat(row.amount);
-                const feesNum = fees != null && fees !== "" ? parseFloat(fees) : null;
-                const shippingNum = shipping != null && shipping !== "" ? parseFloat(shipping) : null;
-                const deductions = (feesNum ?? 0) + (shippingNum ?? 0);
-                const net = deductions > 0 ? amountNum - deductions : null;
+                const deduction =
+                  row.type === "eBay"
+                    ? computeOrderDeductions({
+                        orderTotal: amountNum,
+                        fees: row.record.fees,
+                        shippingCost: row.record.shippingCost,
+                        useFeeEstimate: true,
+                        shippingChargedToBuyer: row.record.rawPayload?.pricingSummary?.deliveryCost?.value != null
+                          ? parseFloat(row.record.rawPayload.pricingSummary.deliveryCost.value!)
+                          : 0,
+                      })
+                    : { fees: 0, shippingCost: 0, totalDeductions: 0, net: amountNum };
                 return (
                   <tr key={row.id} className="border-b border-[var(--border)]">
                     <td className="p-3">{row.date}</td>
@@ -532,18 +553,19 @@ export function SalesView() {
                         onClick={() => setBreakdownRow(row)}
                         className="text-left font-medium text-[var(--foreground)] underline underline-offset-2 hover:no-underline focus:outline-none focus:ring-2 focus:ring-[var(--accent)] rounded"
                       >
-                        ${row.amount}
+                        ${fmtMoney(row.amount)}
                       </button>
                     </td>
                     <td className="p-3 text-[var(--muted)]">
-                      {feesNum != null && feesNum !== 0 ? `−$${fmtMoney(feesNum)}` : "—"}
+                      {deduction.fees > 0 ? `−$${fmtMoney(deduction.fees)}` : "—"}
                     </td>
                     <td className="p-3 text-[var(--muted)]">
-                      {shippingNum != null && shippingNum !== 0 ? `−$${fmtMoney(shippingNum)}` : "—"}
+                      {deduction.shippingCost > 0 ? `−$${fmtMoney(deduction.shippingCost)}` : "—"}
                     </td>
-                    <td className="p-3 text-[var(--foreground)]">
-                      {net != null ? `$${fmtMoney(net)}` : "—"}
+                    <td className="p-3 text-[var(--muted)]">
+                      {deduction.totalDeductions > 0 ? `−$${fmtMoney(deduction.totalDeductions)}` : "—"}
                     </td>
+                    <td className="p-3 text-[var(--foreground)]">${fmtMoney(deduction.net)}</td>
                     <td className="p-3 text-[var(--muted)]">{"extra" in row ? row.extra ?? "—" : "—"}</td>
                   </tr>
                 );

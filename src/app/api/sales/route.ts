@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth-server";
 import { db } from "@/lib/db";
 import { orders, manualSales } from "@/lib/db/schema";
+import { computePeriodTotals } from "@/lib/sales-calc";
 import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -30,14 +31,13 @@ export async function GET(request: NextRequest) {
       return d.getTime() >= fromDate.getTime() && d.getTime() <= toDate.getTime();
     });
 
-    const totalRevenue =
-      ordersInRange.reduce((s, o) => s + parseFloat(String(o.totalAmount)), 0) +
-      manualInRange.reduce((s, m) => s + parseFloat(String(m.amount)), 0);
+    const periodTotals = computePeriodTotals(ordersInRange, manualInRange);
 
     return NextResponse.json({
       orders: ordersInRange,
       manualSales: manualInRange,
-      totalRevenue,
+      totalRevenue: periodTotals.totalRevenue,
+      periodTotals,
       from: fromDate.toISOString(),
       to: toDate.toISOString(),
     });
@@ -46,6 +46,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const message = e instanceof Error ? e.message : "Failed to load sales";
-    return NextResponse.json({ error: message, orders: [], manualSales: [], totalRevenue: 0 }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: message,
+        orders: [],
+        manualSales: [],
+        totalRevenue: 0,
+        periodTotals: {
+          totalRevenue: 0,
+          totalFees: 0,
+          totalShippingCost: 0,
+          totalCostOfCard: 0,
+          totalDeductions: 0,
+          totalNet: 0,
+        },
+      },
+      { status: 500 }
+    );
   }
 }

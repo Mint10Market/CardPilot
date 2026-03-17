@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth-server";
 import { db } from "@/lib/db";
 import { orders, manualSales } from "@/lib/db/schema";
+import { computeOrderDeductions } from "@/lib/sales-calc";
 import { eq } from "drizzle-orm";
 
 function escapeCsv(s: string): string {
@@ -30,17 +31,34 @@ export async function GET(request: NextRequest) {
       d.getTime() >= fromDate.getTime() && d.getTime() <= toDate.getTime();
 
     const rows: string[][] = [
-      ["Type", "Date", "ID", "Amount", "Currency", "Buyer/Customer", "Status", "Notes"],
+      ["Type", "Date", "ID", "Revenue", "Currency", "eBay fees", "Shipping cost", "Deductions", "Net", "Buyer/Customer", "Status", "Notes"],
     ];
     for (const o of ebayOrders) {
       const od = o.orderDate instanceof Date ? o.orderDate : new Date(o.orderDate);
       if (!inRange(od)) continue;
+      const amt = parseFloat(String(o.totalAmount));
+      const raw = o.rawPayload as { pricingSummary?: { deliveryCost?: { value?: string } } } | null | undefined;
+      const shipToBuyer =
+        raw?.pricingSummary?.deliveryCost?.value != null
+          ? parseFloat(raw.pricingSummary.deliveryCost.value)
+          : 0;
+      const d = computeOrderDeductions({
+        orderTotal: amt,
+        fees: o.fees,
+        shippingCost: o.shippingCost,
+        useFeeEstimate: true,
+        shippingChargedToBuyer: shipToBuyer,
+      });
       rows.push([
         "eBay",
         od.toISOString().slice(0, 10),
         o.ebayOrderId ?? o.id,
         String(o.totalAmount),
         o.currency ?? "USD",
+        String(d.fees),
+        String(d.shippingCost),
+        String(d.totalDeductions),
+        String(d.net),
         o.buyerUsername ?? o.buyerUserId ?? "",
         o.status ?? "",
         "",
@@ -49,12 +67,17 @@ export async function GET(request: NextRequest) {
     for (const m of manual) {
       const md = m.saleDate instanceof Date ? m.saleDate : new Date(m.saleDate);
       if (!inRange(md)) continue;
+      const amt = parseFloat(String(m.amount));
       rows.push([
         "Manual",
         md.toISOString().slice(0, 10),
         m.id,
         String(m.amount),
         "USD",
+        "0",
+        "0",
+        "0",
+        String(amt),
         "",
         "",
         m.notes ?? "",
