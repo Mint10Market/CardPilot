@@ -1,15 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth-server";
+import { getInventoryItems } from "@/lib/inventory";
 import { db } from "@/lib/db";
 import { inventoryItems } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireUser();
-    const list = await db.query.inventoryItems.findMany({
-      where: eq(inventoryItems.userId, user.id),
-      orderBy: (i, { asc }) => [asc(i.title)],
+    const { searchParams } = request.nextUrl;
+    const source = searchParams.get("source") as "ebay" | "manual" | null;
+    const search = searchParams.get("search") ?? undefined;
+    const list = await getInventoryItems(user.id, {
+      ...(source === "ebay" || source === "manual" ? { source } : {}),
+      search,
     });
     return NextResponse.json(list);
   } catch (e) {

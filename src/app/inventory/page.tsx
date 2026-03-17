@@ -9,6 +9,9 @@ export default async function InventoryPage() {
 
   return (
     <AppShell title="Inventory">
+      <p className="text-[var(--muted)] mb-6 -mt-2">
+        Items for sale — from eBay sync, Add item, or CSV import. Separate from your personal Collection.
+      </p>
       <InventoryList />
     </AppShell>
   );

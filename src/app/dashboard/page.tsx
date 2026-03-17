@@ -113,14 +113,14 @@ export default async function DashboardPage() {
       {!user.ebayUserId && (
         <Card className="mb-6 p-6">
           <p className="text-[var(--foreground)] mb-3">
-            Connect eBay in Settings to sync sales and inventory, or get started by importing your collection.
+            Connect eBay in Settings to sync sales and inventory, or get started by importing your trading data.
           </p>
           <div className="flex flex-wrap gap-3">
             <LinkButton href="/settings" variant="primary">
               Connect eBay
             </LinkButton>
-            <LinkButton href="/collection" variant="secondary">
-              Import collection
+            <LinkButton href="/trading" variant="secondary">
+              Import from spreadsheet
             </LinkButton>
           </div>
         </Card>
@@ -129,20 +129,20 @@ export default async function DashboardPage() {
       {user.ebayUserId && isEmpty && (
         <Card className="mb-6 p-6">
           <p className="text-[var(--foreground)] mb-3">
-            Get started by syncing your eBay sales or importing your collection.
+            Get started by syncing your eBay sales or importing your trading data.
           </p>
           <p className="text-sm text-[var(--muted)] mb-3">
-            Use &quot;Sync from eBay&quot; above, or add your collection from a spreadsheet.
+            Use &quot;Sync from eBay&quot; above, or add card transactions from a spreadsheet.
           </p>
-          <LinkButton href="/collection" variant="secondary">
-            Import collection
+          <LinkButton href="/trading" variant="secondary">
+            Import from spreadsheet
           </LinkButton>
         </Card>
       )}
 
       <Card className="mb-6">
         <h2 className="text-sm font-medium text-[var(--muted)] uppercase tracking-wider mb-4">
-          Collection ({year})
+          Trading ({year})
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
@@ -160,10 +160,10 @@ export default async function DashboardPage() {
         </div>
         <footer className="mt-4 pt-4 border-t border-[var(--border)] flex justify-end">
           <Link
-            href="/collection"
+            href="/trading"
             className="text-sm font-medium text-[var(--foreground)] hover:text-[var(--muted)] transition-colors"
           >
-            View Collection →
+            View Trading →
           </Link>
         </footer>
       </Card>

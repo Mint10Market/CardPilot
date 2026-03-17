@@ -132,10 +132,10 @@ export function SettingsForm() {
       <section>
         <h2 className="text-lg font-medium text-[var(--foreground)] mb-2">Other settings</h2>
         <p className="text-sm text-[var(--muted)]">
-          <a href="/collection/settings" className="text-[var(--foreground)] underline">
-            Collection settings
+          <a href="/trading/settings" className="text-[var(--foreground)] underline">
+            Trading settings
           </a>{" "}
-          — tax rates, shipping defaults, and sell price goals for your collection.
+          — tax rates, shipping defaults, and sell price goals for card transactions.
         </p>
       </section>
     </div>

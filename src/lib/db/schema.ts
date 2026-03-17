@@ -230,6 +230,24 @@ export const referenceData = pgTable(
   (t) => [unique().on(t.userId, t.type, t.value)]
 );
 
+// Personal collection: items the user keeps (not for sale); no link to inventory.
+export const personalCollectionItems = pgTable("personal_collection_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  category: text("category"), // e.g. sport
+  year: text("year"),
+  setName: text("set_name"),
+  playerOrSubject: text("player_or_subject"),
+  notes: text("notes"),
+  acquiredDate: timestamp("acquired_date", { withTimezone: true }),
+  estimatedValue: decimal("estimated_value", { precision: 12, scale: 2 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Order = typeof orders.$inferSelect;
@@ -252,3 +270,5 @@ export type Expense = typeof expenses.$inferSelect;
 export type NewExpense = typeof expenses.$inferInsert;
 export type ReferenceDatum = typeof referenceData.$inferSelect;
 export type NewReferenceDatum = typeof referenceData.$inferInsert;
+export type PersonalCollectionItem = typeof personalCollectionItems.$inferSelect;
+export type NewPersonalCollectionItem = typeof personalCollectionItems.$inferInsert;
