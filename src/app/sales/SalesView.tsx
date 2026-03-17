@@ -27,6 +27,7 @@ type OrderRow = {
   totalAmount?: string;
   amount?: string;
   fees?: string | null;
+  shippingCost?: string | null;
   buyerUsername?: string | null;
   buyerUserId?: string | null;
   status?: string;
@@ -69,7 +70,9 @@ function TransactionBreakdownModal({
     const orderTotalRaw = raw?.pricingSummary?.total?.value ?? "";
     const orderTotal = orderTotalRaw ? parseFloat(orderTotalRaw) : parseFloat(String(o.totalAmount ?? 0));
     const feesAmount = o.fees != null && o.fees !== "" ? parseFloat(String(o.fees)) : feeFromRaw ? parseFloat(feeFromRaw) : null;
-    const netAfterFees = feesAmount != null ? orderTotal - feesAmount : null;
+    const shippingAmount = o.shippingCost != null && o.shippingCost !== "" ? parseFloat(String(o.shippingCost)) : null;
+    const totalDeductions = (feesAmount ?? 0) + (shippingAmount ?? 0);
+    const netAfterDeductions = totalDeductions > 0 ? orderTotal - totalDeductions : null;
 
     // Line items: prefer raw lineItemCost so item price is correct
     const rawLineItems = raw?.lineItems ?? [];
@@ -189,18 +192,24 @@ function TransactionBreakdownModal({
                   <span>−${fmtMoney(feesAmount)}</span>
                 </div>
               )}
+              {shippingAmount != null && shippingAmount !== 0 && (
+                <div className="flex justify-between text-[var(--muted)]">
+                  <span>Shipping cost (your expense)</span>
+                  <span>−${fmtMoney(shippingAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-[var(--muted)]">
                 <span>Cost of card</span>
                 <span>—</span>
               </div>
-              {netAfterFees != null && (
+              {netAfterDeductions != null && (
                 <div className="flex justify-between font-semibold text-[var(--foreground)] pt-1">
-                  <span>Net (after fees)</span>
-                  <span>${fmtMoney(netAfterFees)}</span>
+                  <span>Net (after fees &amp; shipping)</span>
+                  <span>${fmtMoney(netAfterDeductions)}</span>
                 </div>
               )}
               <p className="text-xs text-[var(--muted)] pt-2 border-t border-[var(--border)] mt-2">
-                Profit = Order total − eBay fees − cost of card. Add cost of card in Collection to see profit here.
+                Profit = Order total − eBay fees − shipping cost − cost of card. Add cost of card in Collection to see profit here.
               </p>
             </div>
           </div>
@@ -391,7 +400,13 @@ export function SalesView() {
     const f = row.record.fees;
     return sum + (f != null && f !== "" ? parseFloat(f) : 0);
   }, 0);
-  const totalNet = data.totalRevenue - totalFees;
+  const totalShipping = all.reduce((sum, row) => {
+    if (row.type !== "eBay") return sum;
+    const s = row.record.shippingCost;
+    return sum + (s != null && s !== "" ? parseFloat(s) : 0);
+  }, 0);
+  const totalDeductions = totalFees + totalShipping;
+  const totalNet = data.totalRevenue - totalDeductions;
 
   return (
     <div className="space-y-4">
@@ -442,13 +457,20 @@ export function SalesView() {
         <p className="text-lg font-medium text-[var(--foreground)]">
           Total revenue (period): ${data.totalRevenue.toFixed(2)}
         </p>
-        {totalFees > 0 && (
+        {(totalFees > 0 || totalShipping > 0) && (
           <>
-            <p className="text-sm text-[var(--muted)]">
-              Total deductions (eBay fees): −${totalFees.toFixed(2)}
-            </p>
+            {totalFees > 0 && (
+              <p className="text-sm text-[var(--muted)]">
+                Total eBay fees: −${totalFees.toFixed(2)}
+              </p>
+            )}
+            {totalShipping > 0 && (
+              <p className="text-sm text-[var(--muted)]">
+                Total shipping cost: −${totalShipping.toFixed(2)}
+              </p>
+            )}
             <p className="text-lg font-medium text-[var(--foreground)]">
-              Net after fees: ${totalNet.toFixed(2)}
+              Net after fees &amp; shipping: ${totalNet.toFixed(2)}
             </p>
           </>
         )}
@@ -460,7 +482,8 @@ export function SalesView() {
               <th className="p-3 font-medium">Date</th>
               <th className="p-3 font-medium">Type</th>
               <th className="p-3 font-medium">Amount</th>
-              <th className="p-3 font-medium">Deductions (fees)</th>
+              <th className="p-3 font-medium">Fees</th>
+              <th className="p-3 font-medium">Shipping</th>
               <th className="p-3 font-medium">Net</th>
               <th className="p-3 font-medium">Note</th>
             </tr>
@@ -468,14 +491,17 @@ export function SalesView() {
           <tbody>
             {all.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-4 text-[var(--muted)]">No sales in this period.</td>
+                <td colSpan={7} className="p-4 text-[var(--muted)]">No sales in this period.</td>
               </tr>
             ) : (
               all.map((row) => {
                 const fees = row.type === "eBay" ? row.record.fees : null;
+                const shipping = row.type === "eBay" ? row.record.shippingCost : null;
                 const amountNum = parseFloat(row.amount);
                 const feesNum = fees != null && fees !== "" ? parseFloat(fees) : null;
-                const net = feesNum != null ? amountNum - feesNum : null;
+                const shippingNum = shipping != null && shipping !== "" ? parseFloat(shipping) : null;
+                const deductions = (feesNum ?? 0) + (shippingNum ?? 0);
+                const net = deductions > 0 ? amountNum - deductions : null;
                 return (
                   <tr key={row.id} className="border-b border-[var(--border)]">
                     <td className="p-3">{row.date}</td>
@@ -491,6 +517,9 @@ export function SalesView() {
                     </td>
                     <td className="p-3 text-[var(--muted)]">
                       {feesNum != null && feesNum !== 0 ? `−$${fmtMoney(feesNum)}` : "—"}
+                    </td>
+                    <td className="p-3 text-[var(--muted)]">
+                      {shippingNum != null && shippingNum !== 0 ? `−$${fmtMoney(shippingNum)}` : "—"}
                     </td>
                     <td className="p-3 text-[var(--foreground)]">
                       {net != null ? `$${fmtMoney(net)}` : "—"}

@@ -59,6 +59,7 @@ type EbayLineItem = {
   baseUnitPrice?: { value?: string };
   lineItemCost?: Amount;
   discountedLineItemCost?: Amount;
+  deliveryCost?: { shippingCost?: Amount; handlingCost?: Amount };
 };
 type EbayOrder = {
   orderId?: string;
@@ -168,6 +169,12 @@ export async function syncOrdersForUser(
       if (!o.orderId || !o.creationDate) continue;
       const { value: totalAmount, currency } = getOrderTotal(o);
       const feeValue = o.pricingSummary?.fee != null ? amountValue(o.pricingSummary.fee) : null;
+      const shippingTotal = (o.lineItems ?? []).reduce((sum, li) => {
+        const ship = li.deliveryCost?.shippingCost != null ? Number(amountValue(li.deliveryCost.shippingCost)) || 0 : 0;
+        const hand = li.deliveryCost?.handlingCost != null ? Number(amountValue(li.deliveryCost.handlingCost)) || 0 : 0;
+        return sum + ship + hand;
+      }, 0);
+      const shippingValue = shippingTotal > 0 ? String(shippingTotal.toFixed(2)) : null;
       const lineItems = (o.lineItems ?? []).map((li) => ({
         sku: li.sku,
         title: li.title ?? "",
@@ -186,6 +193,7 @@ export async function syncOrdersForUser(
           totalAmount,
           currency,
           fees: feeValue ?? undefined,
+          shippingCost: shippingValue ?? undefined,
           lineItems,
           rawPayload: o as unknown as Record<string, unknown>,
         })
@@ -198,6 +206,7 @@ export async function syncOrdersForUser(
             status: o.orderFulfillmentStatus ?? "UNKNOWN",
             totalAmount,
             fees: feeValue ?? undefined,
+            shippingCost: shippingValue ?? undefined,
             lineItems,
             rawPayload: o as unknown as Record<string, unknown>,
             updatedAt: new Date(),

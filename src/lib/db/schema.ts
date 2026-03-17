@@ -41,6 +41,7 @@ export const orders = pgTable("orders", {
   totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
   currency: text("currency").default("USD"),
   fees: decimal("fees", { precision: 12, scale: 2 }),
+  shippingCost: decimal("shipping_cost", { precision: 12, scale: 2 }),
   lineItems: jsonb("line_items").$type<Array<{ sku?: string; title: string; quantity: number; price: string }>>().notNull(),
   rawPayload: jsonb("raw_payload"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
