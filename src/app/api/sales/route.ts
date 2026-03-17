@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
     if (e instanceof Error && e.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    throw e;
+    const message = e instanceof Error ? e.message : "Failed to load sales";
+    return NextResponse.json({ error: message, orders: [], manualSales: [], totalRevenue: 0 }, { status: 500 });
   }
 }

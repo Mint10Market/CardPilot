@@ -18,6 +18,7 @@
     "db:push": "drizzle-kit push",
     "align:check": "node scripts/verify-alignment.mjs",
     "apply:0005": "node scripts/apply-migration-0005.mjs",
+    "apply:0006": "node scripts/apply-migration-0006.mjs",
     "trigger:dev": "npx trigger.dev@latest dev",
     "trigger:deploy": "npx trigger.dev@latest deploy"
   },

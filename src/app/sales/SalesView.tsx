@@ -321,6 +321,7 @@ export function SalesView() {
     orders: OrderRow[];
     manualSales: ManualRow[];
     totalRevenue: number;
+    error?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showManual, setShowManual] = useState(false);
@@ -331,9 +332,19 @@ export function SalesView() {
     if (from) params.set("from", from);
     if (to) params.set("to", to);
     return fetch(`/api/sales?${params}`)
-      .then((r) => r.json())
-      .then(setData)
-      .catch(() => setData(null));
+      .then((r) => r.json().then((body) => ({ ok: r.ok, body })))
+      .then(({ ok, body }) => {
+        if (!ok || body?.error) {
+          setData({ orders: [], manualSales: [], totalRevenue: 0, error: body?.error ?? "Failed to load sales" });
+          return;
+        }
+        setData({
+          orders: Array.isArray(body.orders) ? body.orders : [],
+          manualSales: Array.isArray(body.manualSales) ? body.manualSales : [],
+          totalRevenue: typeof body.totalRevenue === "number" ? body.totalRevenue : 0,
+        });
+      })
+      .catch(() => setData({ orders: [], manualSales: [], totalRevenue: 0, error: "Network error" }));
   }, [from, to]);
 
   useEffect(() => {
@@ -377,8 +388,12 @@ export function SalesView() {
 
   if (loading || !data) return <p className="text-[var(--muted)]">Loading…</p>;
 
+  const orders = Array.isArray(data.orders) ? data.orders : [];
+  const manualSales = Array.isArray(data.manualSales) ? data.manualSales : [];
+  const totalRevenue = typeof data.totalRevenue === "number" ? data.totalRevenue : 0;
+
   const all: TableRow[] = [
-    ...data.orders.map((o): TableRow => ({
+    ...orders.map((o): TableRow => ({
       type: "eBay",
       date: (o.orderDate || "").toString().slice(0, 10),
       amount: String(o.totalAmount ?? 0),
@@ -386,7 +401,7 @@ export function SalesView() {
       extra: o.buyerUsername ?? o.buyerUserId ?? undefined,
       record: o,
     })),
-    ...data.manualSales.map((m): TableRow => ({
+    ...manualSales.map((m): TableRow => ({
       type: "Manual",
       date: (m.saleDate || "").toString().slice(0, 10),
       amount: String(m.amount ?? 0),
@@ -406,10 +421,15 @@ export function SalesView() {
     return sum + (s != null && s !== "" ? parseFloat(s) : 0);
   }, 0);
   const totalDeductions = totalFees + totalShipping;
-  const totalNet = data.totalRevenue - totalDeductions;
+  const totalNet = totalRevenue - totalDeductions;
 
   return (
     <div className="space-y-4">
+      {data.error && (
+        <p className="text-sm text-[var(--error)] bg-[var(--error)]/10 border border-[var(--error)]/30 rounded-[var(--radius)] px-3 py-2">
+          {data.error}. If you recently deployed, run the database migration (e.g. <code className="text-xs">npm run db:migrate</code>).
+        </p>
+      )}
       <div className="flex flex-wrap gap-3 items-center">
         <label className="text-sm text-[var(--muted)]">
           From
@@ -455,7 +475,7 @@ export function SalesView() {
       )}
       <Card className="space-y-1">
         <p className="text-lg font-medium text-[var(--foreground)]">
-          Total revenue (period): ${data.totalRevenue.toFixed(2)}
+          Total revenue (period): ${totalRevenue.toFixed(2)}
         </p>
         {(totalFees > 0 || totalShipping > 0) && (
           <>
