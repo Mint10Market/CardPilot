@@ -10,6 +10,7 @@ type EbayRawPayload = {
     priceSubtotal?: { value?: string };
     deliveryCost?: { value?: string };
     tax?: { value?: string };
+    fee?: { value?: string };
     total?: { value?: string };
   };
   lineItems?: Array<{
@@ -25,6 +26,7 @@ type OrderRow = {
   saleDate?: string;
   totalAmount?: string;
   amount?: string;
+  fees?: string | null;
   buyerUsername?: string | null;
   buyerUserId?: string | null;
   status?: string;
@@ -63,8 +65,11 @@ function TransactionBreakdownModal({
     const priceSubtotal = raw?.pricingSummary?.priceSubtotal?.value ?? "";
     const deliveryCost = raw?.pricingSummary?.deliveryCost?.value ?? "";
     const tax = raw?.pricingSummary?.tax?.value ?? "";
+    const feeFromRaw = raw?.pricingSummary?.fee?.value ?? "";
     const orderTotalRaw = raw?.pricingSummary?.total?.value ?? "";
     const orderTotal = orderTotalRaw ? parseFloat(orderTotalRaw) : parseFloat(String(o.totalAmount ?? 0));
+    const feesAmount = o.fees != null && o.fees !== "" ? parseFloat(String(o.fees)) : feeFromRaw ? parseFloat(feeFromRaw) : null;
+    const netAfterFees = feesAmount != null ? orderTotal - feesAmount : null;
 
     // Line items: prefer raw lineItemCost so item price is correct
     const rawLineItems = raw?.lineItems ?? [];
@@ -175,8 +180,27 @@ function TransactionBreakdownModal({
                 <span>Order total</span>
                 <span>${fmtMoney(orderTotal)} {o.currency && o.currency !== "USD" ? o.currency : ""}</span>
               </div>
+            </div>
+            <div className="border-t border-[var(--border)] pt-3 space-y-1 text-sm">
+              <p className="text-sm font-medium text-[var(--foreground)] mb-2">Deductions</p>
+              {feesAmount != null && feesAmount !== 0 && (
+                <div className="flex justify-between text-[var(--muted)]">
+                  <span>eBay fees</span>
+                  <span>−${fmtMoney(feesAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-[var(--muted)]">
+                <span>Cost of card</span>
+                <span>—</span>
+              </div>
+              {netAfterFees != null && (
+                <div className="flex justify-between font-semibold text-[var(--foreground)] pt-1">
+                  <span>Net (after fees)</span>
+                  <span>${fmtMoney(netAfterFees)}</span>
+                </div>
+              )}
               <p className="text-xs text-[var(--muted)] pt-2 border-t border-[var(--border)] mt-2">
-                Profit from sale = Order total − cost of card
+                Profit = Order total − eBay fees − cost of card. Add cost of card in Collection to see profit here.
               </p>
             </div>
           </div>
@@ -362,6 +386,13 @@ export function SalesView() {
     })),
   ].sort((a, b) => (b.date > a.date ? 1 : -1));
 
+  const totalFees = all.reduce((sum, row) => {
+    if (row.type !== "eBay") return sum;
+    const f = row.record.fees;
+    return sum + (f != null && f !== "" ? parseFloat(f) : 0);
+  }, 0);
+  const totalNet = data.totalRevenue - totalFees;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center">
@@ -407,10 +438,20 @@ export function SalesView() {
           </form>
         </Card>
       )}
-      <Card>
+      <Card className="space-y-1">
         <p className="text-lg font-medium text-[var(--foreground)]">
           Total revenue (period): ${data.totalRevenue.toFixed(2)}
         </p>
+        {totalFees > 0 && (
+          <>
+            <p className="text-sm text-[var(--muted)]">
+              Total deductions (eBay fees): −${totalFees.toFixed(2)}
+            </p>
+            <p className="text-lg font-medium text-[var(--foreground)]">
+              Net after fees: ${totalNet.toFixed(2)}
+            </p>
+          </>
+        )}
       </Card>
       <Card className="overflow-hidden p-0">
         <table className="w-full text-left text-sm">
@@ -419,31 +460,45 @@ export function SalesView() {
               <th className="p-3 font-medium">Date</th>
               <th className="p-3 font-medium">Type</th>
               <th className="p-3 font-medium">Amount</th>
+              <th className="p-3 font-medium">Deductions (fees)</th>
+              <th className="p-3 font-medium">Net</th>
               <th className="p-3 font-medium">Note</th>
             </tr>
           </thead>
           <tbody>
             {all.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-4 text-[var(--muted)]">No sales in this period.</td>
+                <td colSpan={6} className="p-4 text-[var(--muted)]">No sales in this period.</td>
               </tr>
             ) : (
-              all.map((row) => (
-                <tr key={row.id} className="border-b border-[var(--border)]">
-                  <td className="p-3">{row.date}</td>
-                  <td className="p-3">{row.type}</td>
-                  <td className="p-3">
-                    <button
-                      type="button"
-                      onClick={() => setBreakdownRow(row)}
-                      className="text-left font-medium text-[var(--foreground)] underline underline-offset-2 hover:no-underline focus:outline-none focus:ring-2 focus:ring-[var(--accent)] rounded"
-                    >
-                      ${row.amount}
-                    </button>
-                  </td>
-                  <td className="p-3 text-[var(--muted)]">{"extra" in row ? row.extra ?? "—" : "—"}</td>
-                </tr>
-              ))
+              all.map((row) => {
+                const fees = row.type === "eBay" ? row.record.fees : null;
+                const amountNum = parseFloat(row.amount);
+                const feesNum = fees != null && fees !== "" ? parseFloat(fees) : null;
+                const net = feesNum != null ? amountNum - feesNum : null;
+                return (
+                  <tr key={row.id} className="border-b border-[var(--border)]">
+                    <td className="p-3">{row.date}</td>
+                    <td className="p-3">{row.type}</td>
+                    <td className="p-3">
+                      <button
+                        type="button"
+                        onClick={() => setBreakdownRow(row)}
+                        className="text-left font-medium text-[var(--foreground)] underline underline-offset-2 hover:no-underline focus:outline-none focus:ring-2 focus:ring-[var(--accent)] rounded"
+                      >
+                        ${row.amount}
+                      </button>
+                    </td>
+                    <td className="p-3 text-[var(--muted)]">
+                      {feesNum != null && feesNum !== 0 ? `−$${fmtMoney(feesNum)}` : "—"}
+                    </td>
+                    <td className="p-3 text-[var(--foreground)]">
+                      {net != null ? `$${fmtMoney(net)}` : "—"}
+                    </td>
+                    <td className="p-3 text-[var(--muted)]">{"extra" in row ? row.extra ?? "—" : "—"}</td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

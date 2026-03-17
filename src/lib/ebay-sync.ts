@@ -70,6 +70,7 @@ type EbayOrder = {
     priceSubtotal?: Amount | string;
     deliveryCost?: Amount | string;
     tax?: Amount | string;
+    fee?: Amount | string;
   };
   paymentSummary?: { payments?: Array<{ amount?: Amount }> };
   orderPaymentSummary?: { total?: string; payments?: Array<{ amount?: Amount }> };
@@ -166,6 +167,7 @@ export async function syncOrdersForUser(
     for (const o of list) {
       if (!o.orderId || !o.creationDate) continue;
       const { value: totalAmount, currency } = getOrderTotal(o);
+      const feeValue = o.pricingSummary?.fee != null ? amountValue(o.pricingSummary.fee) : null;
       const lineItems = (o.lineItems ?? []).map((li) => ({
         sku: li.sku,
         title: li.title ?? "",
@@ -183,6 +185,7 @@ export async function syncOrdersForUser(
           status: o.orderFulfillmentStatus ?? "UNKNOWN",
           totalAmount,
           currency,
+          fees: feeValue ?? undefined,
           lineItems,
           rawPayload: o as unknown as Record<string, unknown>,
         })
@@ -194,6 +197,7 @@ export async function syncOrdersForUser(
             buyerUserId: o.buyer?.buyerUserId ?? null,
             status: o.orderFulfillmentStatus ?? "UNKNOWN",
             totalAmount,
+            fees: feeValue ?? undefined,
             lineItems,
             rawPayload: o as unknown as Record<string, unknown>,
             updatedAt: new Date(),

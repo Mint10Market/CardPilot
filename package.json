@@ -10,6 +10,7 @@
     "check": "npm run lint && npm run build",
     "check:full": "npm run check && npm run test",
     "verify:secrets": "bash scripts/verify-no-secrets.sh",
+    "verify:secrets:scan": "bash scripts/scan-history-for-secrets.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",

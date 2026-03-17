@@ -7,6 +7,9 @@
 1. **Don’t force-add it:** Never run `git add -f .env.local`; that would commit secrets.
 2. **Confirm nothing secret is staged:** Run `git status` and ensure `.env.local` never appears under “Changes to be committed”.
 3. **Optional check:** Run `npm run verify:secrets` (or manually: `git check-ignore -v .env.local` and `git ls-files .env.local`). The script ensures `.env.local` is ignored, not tracked, and not staged.
+4. **Scan history:** Run `./scripts/scan-history-for-secrets.sh` (or `npm run verify:secrets:scan`) to confirm no secret env file has ever been committed. If it reports "OK", the repo history is clean.
+
+**If you pasted `.env.local` into a chat, email, or ticket:** That is an exposure. Rotate all secrets listed below; the repo itself may still be clean.
 
 ## If `.env.local` or any secrets were committed
 
