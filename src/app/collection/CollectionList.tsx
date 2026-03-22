@@ -42,10 +42,14 @@ export function CollectionList() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    load().finally(() => {
-      if (!cancelled) setLoading(false);
-    });
+    void Promise.resolve()
+      .then(() => {
+        if (!cancelled) setLoading(true);
+        return load();
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };

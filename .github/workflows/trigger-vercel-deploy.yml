@@ -1,15 +1,30 @@
-# Trigger Vercel deploy on push to main (use when Git integration doesn't create deployments).
-# Add secret: GitHub repo → Settings → Secrets → Actions → VERCEL_DEPLOY_HOOK_URL
-# Get the URL: Vercel → Project → Settings → Git → Deploy Hooks → Create (name: "main", branch: main) → copy URL
+# Optional: manually trigger a Vercel production deploy via Deploy Hook.
+#
+# When the Vercel project is connected to this GitHub repo, pushes to `main`
+# already deploy automatically — you do NOT need to run this workflow for every push.
+#
+# Use this only if Git integration is broken or you want an extra deploy without a commit.
+#
+# Setup: Vercel → Project → Settings → Git → Deploy Hooks → Create (branch: main) → copy URL.
+# GitHub → Settings → Secrets → Actions → VERCEL_DEPLOY_HOOK_URL = that URL
+
 name: Trigger Vercel Deploy
+
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+
 jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          curl -sS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" \
+      - name: POST deploy hook
+        env:
+          HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "::error::Secret VERCEL_DEPLOY_HOOK_URL is not set (Repo → Settings → Secrets → Actions)."
+            exit 1
+          fi
+          curl -sS -X POST "$HOOK_URL" \
             -H "Content-Type: application/json" \
-            --fail-with-body || true
+            --fail-with-body

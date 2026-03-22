@@ -74,6 +74,7 @@ export function computeCardTransaction(
   settings: Partial<UserSettingsForCalc> = {},
   stateTaxRates: Map<string, number> = new Map()
 ): CardTransactionComputed {
+  void stateTaxRates; // reserved for buyer-state sales tax when row includes ship-to state
   const s = { ...defaultSettings, ...settings };
   const taxRate = n(s.salesTaxRate);
   const shipUnder20 = n(s.shippingUnder20);

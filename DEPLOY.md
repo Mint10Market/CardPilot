@@ -117,7 +117,8 @@ Use the URL it prints (e.g. `https://card-pilot.vercel.app`).
 
 **If Git doesn’t trigger deployments**
 
-- Add a **Deploy Hook**: Vercel → project → **Settings → Git** → **Deploy Hooks** → Create (e.g. name “main”, branch `main`) → copy the URL. In GitHub → repo → **Settings → Secrets and variables → Actions** → New secret: name **VERCEL_DEPLOY_HOOK_URL**, value = that URL. Each push to `main` will then trigger a deploy via the workflow.
+- Add a **Deploy Hook**: Vercel → project → **Settings → Git** → **Deploy Hooks** → Create (branch `main`) → copy the URL. In GitHub → **Settings → Secrets → Actions**, add **VERCEL_DEPLOY_HOOK_URL** with that URL.
+- Run **Actions → Trigger Vercel Deploy → Run workflow** when you want a deploy without relying on Git (or to recover from a stuck integration). Normal pushes to `main` should use Vercel’s Git integration only — no hook needed on every push.
 
 ---
 
@@ -172,6 +173,15 @@ Manual uploads use **POST `/api/uploads/item-image`** (multipart field `file`). 
 3. (Optional) Run DB migrations if needed:  
    `DATABASE_URL=your_supabase_url npm run db:migrate`  
    (or `npm run db:push` if you use push). **Guest sign-in (“Continue without connecting”) requires migration `0005_users_optional_ebay_display_name.sql`**; without it, `/api/auth/guest` returns 500.
+
+---
+
+## GitHub Actions **CI** failing (red check on push)
+
+The **CI** workflow runs **`npm run lint`**, **`npm run test`**, and **`npm run build`** on pushes and PRs to `main`. It does **not** deploy the app (Vercel does that when the repo is linked).
+
+1. In GitHub → **Actions** → open the failed **CI** run → job **check** → expand the first red step (often **Run npm run lint**).
+2. Fix the reported issues locally (`npm run lint`, `npm run test`, `npm run build`), commit, and push.
 
 ---
 

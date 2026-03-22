@@ -3,7 +3,6 @@ import { requireUser } from "@/lib/auth-server";
 import { getCollectionItems } from "@/lib/collection-items";
 import { db } from "@/lib/db";
 import { personalCollectionItems } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
