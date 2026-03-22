@@ -69,6 +69,14 @@ function getShippingLabelCost(rawPayload: unknown): number {
   return Math.round(sum * 100) / 100;
 }
 
+/** Buyer sales tax included in order total (remitted; not seller revenue). */
+function getBuyerSalesTax(rawPayload: unknown): number {
+  const raw = rawPayload as EbayRawPayload | null | undefined;
+  const v = raw?.pricingSummary?.tax?.value;
+  const n = typeof v === "string" ? parseFloat(v) : Number(v);
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+}
+
 function TransactionBreakdownModal({
   row,
   onClose,
@@ -84,10 +92,12 @@ function TransactionBreakdownModal({
     const shippingChargedToBuyer = raw?.pricingSummary?.deliveryCost?.value != null ? parseFloat(raw.pricingSummary.deliveryCost.value) : 0;
     const shippingLabelCost = getShippingLabelCost(o.rawPayload);
     const hasLineItems = Array.isArray((o.rawPayload as unknown as { lineItems?: unknown }).lineItems);
+    const buyerSalesTax = getBuyerSalesTax(o.rawPayload);
     const deduction = computeOrderDeductions({
       orderTotal,
       fees: o.fees,
       shippingCost: hasLineItems ? shippingLabelCost : o.shippingCost,
+      salesTax: buyerSalesTax,
       useFeeEstimate: true,
       shippingChargedToBuyer,
     });
@@ -216,6 +226,10 @@ function TransactionBreakdownModal({
                 <span>{deduction.shippingCost > 0 ? `−$${fmtMoney(deduction.shippingCost)}` : "—"}</span>
               </div>
               <div className="flex justify-between text-[var(--muted)]">
+                <span>Sales tax (in order total)</span>
+                <span>{deduction.salesTax > 0 ? `−$${fmtMoney(deduction.salesTax)}` : "—"}</span>
+              </div>
+              <div className="flex justify-between text-[var(--muted)]">
                 <span>Cost of card</span>
                 <span>{deduction.costOfCard > 0 ? `−$${fmtMoney(deduction.costOfCard)}` : "—"}</span>
               </div>
@@ -230,7 +244,7 @@ function TransactionBreakdownModal({
                 <span>${fmtMoney(deduction.net)}</span>
               </div>
               <p className="text-xs text-[var(--muted)] pt-2 mt-1">
-                Net = Order total − Total deductions. Profit = Net when cost of card is included above.
+                Net = Order total − Total deductions (fees, your shipping label, buyer sales tax remitted, cost of card).
               </p>
             </div>
           </div>
@@ -346,6 +360,7 @@ export function SalesView() {
       totalRevenue: number;
       totalFees: number;
       totalShippingCost: number;
+      totalSalesTax: number;
       totalCostOfCard: number;
       totalDeductions: number;
       totalNet: number;
@@ -368,7 +383,15 @@ export function SalesView() {
             orders: [],
             manualSales: [],
             totalRevenue: 0,
-            periodTotals: { totalRevenue: 0, totalFees: 0, totalShippingCost: 0, totalCostOfCard: 0, totalDeductions: 0, totalNet: 0 },
+            periodTotals: {
+              totalRevenue: 0,
+              totalFees: 0,
+              totalShippingCost: 0,
+              totalSalesTax: 0,
+              totalCostOfCard: 0,
+              totalDeductions: 0,
+              totalNet: 0,
+            },
             error: body?.error ?? "Failed to load sales",
           });
           return;
@@ -385,7 +408,15 @@ export function SalesView() {
           orders: [],
           manualSales: [],
           totalRevenue: 0,
-          periodTotals: { totalRevenue: 0, totalFees: 0, totalShippingCost: 0, totalCostOfCard: 0, totalDeductions: 0, totalNet: 0 },
+          periodTotals: {
+            totalRevenue: 0,
+            totalFees: 0,
+            totalShippingCost: 0,
+            totalSalesTax: 0,
+            totalCostOfCard: 0,
+            totalDeductions: 0,
+            totalNet: 0,
+          },
           error: "Network error",
         })
       );
@@ -515,6 +546,11 @@ export function SalesView() {
         <p className="text-sm text-[var(--muted)]">
           Total shipping cost: −${periodTotals.totalShippingCost.toFixed(2)}
         </p>
+        {(periodTotals.totalSalesTax ?? 0) > 0 && (
+          <p className="text-sm text-[var(--muted)]">
+            Total sales tax (in order totals): −${(periodTotals.totalSalesTax ?? 0).toFixed(2)}
+          </p>
+        )}
         {periodTotals.totalCostOfCard > 0 && (
           <p className="text-sm text-[var(--muted)]">
             Total cost of card: −${periodTotals.totalCostOfCard.toFixed(2)}
@@ -536,6 +572,7 @@ export function SalesView() {
               <th className="p-3 font-medium">Revenue</th>
               <th className="p-3 font-medium">eBay fees</th>
               <th className="p-3 font-medium">Shipping</th>
+              <th className="p-3 font-medium">Sales tax</th>
               <th className="p-3 font-medium">Deductions</th>
               <th className="p-3 font-medium">Net</th>
               <th className="p-3 font-medium">Note</th>
@@ -544,7 +581,7 @@ export function SalesView() {
           <tbody>
             {all.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-4 text-[var(--muted)]">No sales in this period.</td>
+                <td colSpan={9} className="p-4 text-[var(--muted)]">No sales in this period.</td>
               </tr>
             ) : (
               all.map((row) => {
@@ -554,6 +591,7 @@ export function SalesView() {
                     ? (() => {
                         const o = row.record;
                         const shippingLabelCost = getShippingLabelCost(o.rawPayload);
+                        const buyerSalesTax = getBuyerSalesTax(o.rawPayload);
                         const hasLineItems = Array.isArray(
                           (o.rawPayload as unknown as { lineItems?: unknown }).lineItems
                         );
@@ -561,6 +599,7 @@ export function SalesView() {
                           orderTotal: amountNum,
                           fees: o.fees,
                           shippingCost: hasLineItems ? shippingLabelCost : o.shippingCost,
+                          salesTax: buyerSalesTax,
                           useFeeEstimate: true,
                           shippingChargedToBuyer:
                             o.rawPayload?.pricingSummary?.deliveryCost?.value != null
@@ -568,7 +607,7 @@ export function SalesView() {
                               : 0,
                         });
                       })()
-                    : { fees: 0, shippingCost: 0, totalDeductions: 0, net: amountNum };
+                    : { fees: 0, shippingCost: 0, salesTax: 0, totalDeductions: 0, net: amountNum };
                 return (
                   <tr key={row.id} className="border-b border-[var(--border)]">
                     <td className="p-3">{row.date}</td>
@@ -587,6 +626,9 @@ export function SalesView() {
                     </td>
                     <td className="p-3 text-[var(--muted)]">
                       {deduction.shippingCost > 0 ? `−$${fmtMoney(deduction.shippingCost)}` : "—"}
+                    </td>
+                    <td className="p-3 text-[var(--muted)]">
+                      {deduction.salesTax > 0 ? `−$${fmtMoney(deduction.salesTax)}` : "—"}
                     </td>
                     <td className="p-3 text-[var(--muted)]">
                       {deduction.totalDeductions > 0 ? `−$${fmtMoney(deduction.totalDeductions)}` : "—"}

@@ -52,23 +52,42 @@ export async function GET(request: NextRequest) {
       d.getTime() >= fromDate.getTime() && d.getTime() <= toDate.getTime();
 
     const rows: string[][] = [
-      ["Type", "Date", "ID", "Revenue", "Currency", "eBay fees", "Shipping cost", "Deductions", "Net", "Buyer/Customer", "Status", "Notes"],
+      [
+        "Type",
+        "Date",
+        "ID",
+        "Revenue",
+        "Currency",
+        "eBay fees",
+        "Shipping cost",
+        "Sales tax",
+        "Deductions",
+        "Net",
+        "Buyer/Customer",
+        "Status",
+        "Notes",
+      ],
     ];
     for (const o of ebayOrders) {
       const od = o.orderDate instanceof Date ? o.orderDate : new Date(o.orderDate);
       if (!inRange(od)) continue;
       const amt = parseFloat(String(o.totalAmount));
-      const raw = o.rawPayload as { pricingSummary?: { deliveryCost?: { value?: string } } } | null | undefined;
+      const raw = o.rawPayload as {
+        pricingSummary?: { deliveryCost?: { value?: string }; tax?: { value?: string } };
+      } | null | undefined;
       const shipToBuyer =
         raw?.pricingSummary?.deliveryCost?.value != null
           ? parseFloat(raw.pricingSummary.deliveryCost.value)
           : 0;
+      const buyerSalesTax =
+        raw?.pricingSummary?.tax?.value != null ? parseFloat(raw.pricingSummary.tax.value) : 0;
       const shippingLabelCost = getShippingLabelCost(o.rawPayload);
       const hasLineItems = Array.isArray((o.rawPayload as unknown as { lineItems?: unknown }).lineItems);
       const d = computeOrderDeductions({
         orderTotal: amt,
         fees: o.fees,
         shippingCost: hasLineItems ? shippingLabelCost : o.shippingCost,
+        salesTax: Number.isFinite(buyerSalesTax) ? buyerSalesTax : 0,
         useFeeEstimate: true,
         shippingChargedToBuyer: shipToBuyer,
       });
@@ -80,6 +99,7 @@ export async function GET(request: NextRequest) {
         o.currency ?? "USD",
         String(d.fees),
         String(d.shippingCost),
+        String(d.salesTax),
         String(d.totalDeductions),
         String(d.net),
         o.buyerUsername ?? o.buyerUserId ?? "",
@@ -97,6 +117,7 @@ export async function GET(request: NextRequest) {
         m.id,
         String(m.amount),
         "USD",
+        "0",
         "0",
         "0",
         "0",

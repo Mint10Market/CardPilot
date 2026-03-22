@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
           totalRevenue: 0,
           totalFees: 0,
           totalShippingCost: 0,
+          totalSalesTax: 0,
           totalCostOfCard: 0,
           totalDeductions: 0,
           totalNet: 0,
