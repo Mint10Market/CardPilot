@@ -100,6 +100,7 @@ function TransactionBreakdownModal({
       salesTax: buyerSalesTax,
       useFeeEstimate: true,
       shippingChargedToBuyer,
+      rawPayload: o.rawPayload,
     });
     const priceSubtotal = raw?.pricingSummary?.priceSubtotal?.value ?? "";
     const deliveryCost = raw?.pricingSummary?.deliveryCost?.value ?? "";
@@ -222,6 +223,10 @@ function TransactionBreakdownModal({
                 <span>−${fmtMoney(deduction.fees)}</span>
               </div>
               <div className="flex justify-between text-[var(--muted)]">
+                <span>{deduction.adFeesIsEstimated ? "Ad / promoted fees (est.)" : "Ad / promoted fees"}</span>
+                <span>{deduction.adFees > 0 ? `−$${fmtMoney(deduction.adFees)}` : "—"}</span>
+              </div>
+              <div className="flex justify-between text-[var(--muted)]">
                 <span>Shipping cost (your expense)</span>
                 <span>{deduction.shippingCost > 0 ? `−$${fmtMoney(deduction.shippingCost)}` : "—"}</span>
               </div>
@@ -244,7 +249,7 @@ function TransactionBreakdownModal({
                 <span>${fmtMoney(deduction.net)}</span>
               </div>
               <p className="text-xs text-[var(--muted)] pt-2 mt-1">
-                Net = Order total − Total deductions (fees, your shipping label, buyer sales tax remitted, cost of card).
+                eBay fees (est.) follow Seller Hub: FVF 12.35% on subtotal + shipping + tax, 10% TRS discount on that variable amount, fixed $0.30 or $0.40 (if fees-based-on ≥ $10.01). Net = order total − fees, ad fees, label, sales tax, cost of card.
               </p>
             </div>
           </div>
@@ -359,6 +364,7 @@ export function SalesView() {
     periodTotals?: {
       totalRevenue: number;
       totalFees: number;
+      totalAdFees: number;
       totalShippingCost: number;
       totalSalesTax: number;
       totalCostOfCard: number;
@@ -386,6 +392,7 @@ export function SalesView() {
             periodTotals: {
               totalRevenue: 0,
               totalFees: 0,
+              totalAdFees: 0,
               totalShippingCost: 0,
               totalSalesTax: 0,
               totalCostOfCard: 0,
@@ -411,6 +418,7 @@ export function SalesView() {
           periodTotals: {
             totalRevenue: 0,
             totalFees: 0,
+            totalAdFees: 0,
             totalShippingCost: 0,
             totalSalesTax: 0,
             totalCostOfCard: 0,
@@ -544,6 +552,9 @@ export function SalesView() {
           Total eBay fees: −${periodTotals.totalFees.toFixed(2)}
         </p>
         <p className="text-sm text-[var(--muted)]">
+          Total ad / promoted fees (est.): −${(periodTotals.totalAdFees ?? 0).toFixed(2)}
+        </p>
+        <p className="text-sm text-[var(--muted)]">
           Total shipping cost: −${periodTotals.totalShippingCost.toFixed(2)}
         </p>
         {(periodTotals.totalSalesTax ?? 0) > 0 && (
@@ -571,6 +582,7 @@ export function SalesView() {
               <th className="p-3 font-medium">Type</th>
               <th className="p-3 font-medium">Revenue</th>
               <th className="p-3 font-medium">eBay fees</th>
+              <th className="p-3 font-medium">Ad fees</th>
               <th className="p-3 font-medium">Shipping</th>
               <th className="p-3 font-medium">Sales tax</th>
               <th className="p-3 font-medium">Deductions</th>
@@ -581,7 +593,7 @@ export function SalesView() {
           <tbody>
             {all.length === 0 ? (
               <tr>
-                <td colSpan={9} className="p-4 text-[var(--muted)]">No sales in this period.</td>
+                <td colSpan={10} className="p-4 text-[var(--muted)]">No sales in this period.</td>
               </tr>
             ) : (
               all.map((row) => {
@@ -605,9 +617,17 @@ export function SalesView() {
                             o.rawPayload?.pricingSummary?.deliveryCost?.value != null
                               ? parseFloat(o.rawPayload.pricingSummary.deliveryCost.value!)
                               : 0,
+                          rawPayload: o.rawPayload,
                         });
                       })()
-                    : { fees: 0, shippingCost: 0, salesTax: 0, totalDeductions: 0, net: amountNum };
+                    : {
+                        fees: 0,
+                        adFees: 0,
+                        shippingCost: 0,
+                        salesTax: 0,
+                        totalDeductions: 0,
+                        net: amountNum,
+                      };
                 return (
                   <tr key={row.id} className="border-b border-[var(--border)]">
                     <td className="p-3">{row.date}</td>
@@ -623,6 +643,9 @@ export function SalesView() {
                     </td>
                     <td className="p-3 text-[var(--muted)]">
                       {deduction.fees > 0 ? `−$${fmtMoney(deduction.fees)}` : "—"}
+                    </td>
+                    <td className="p-3 text-[var(--muted)]">
+                      {deduction.adFees > 0 ? `−$${fmtMoney(deduction.adFees)}` : "—"}
                     </td>
                     <td className="p-3 text-[var(--muted)]">
                       {deduction.shippingCost > 0 ? `−$${fmtMoney(deduction.shippingCost)}` : "—"}

@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
         "Revenue",
         "Currency",
         "eBay fees",
+        "Ad fees",
         "Shipping cost",
         "Sales tax",
         "Deductions",
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
         salesTax: Number.isFinite(buyerSalesTax) ? buyerSalesTax : 0,
         useFeeEstimate: true,
         shippingChargedToBuyer: shipToBuyer,
+        rawPayload: o.rawPayload,
       });
       rows.push([
         "eBay",
@@ -98,6 +100,7 @@ export async function GET(request: NextRequest) {
         String(o.totalAmount),
         o.currency ?? "USD",
         String(d.fees),
+        String(d.adFees),
         String(d.shippingCost),
         String(d.salesTax),
         String(d.totalDeductions),
@@ -117,6 +120,7 @@ export async function GET(request: NextRequest) {
         m.id,
         String(m.amount),
         "USD",
+        "0",
         "0",
         "0",
         "0",
