@@ -165,57 +165,6 @@ function inventorySkuConcurrency(): number {
   return 12;
 }
 
-/** Keep JSON small so batched INSERTs stay under pooler / max query size limits. */
-const SLIM_DESCRIPTION_MAX = 6000;
-const SLIM_IMAGE_URLS_MAX = 8;
-
-function buildSlimInventoryRawPayload(
-  sku: string,
-  item: InventoryItemDetail | null,
-  offers: NonNullable<OfferResponse["offers"]>
-): Record<string, unknown> | null {
-  if (!item && offers.length === 0) return null;
-
-  const slimOffers = offers.map((o) => ({
-    offerId: o.offerId,
-    sku: o.sku,
-    availableQuantity: o.availableQuantity,
-    pricingSummary: o.pricingSummary,
-    listing: o.listing,
-  }));
-
-  if (!item) {
-    return { sku, offers: slimOffers };
-  }
-
-  const product = item.product;
-  let description: string | undefined;
-  if (product?.description && typeof product.description === "string") {
-    const d = product.description;
-    description = d.length > SLIM_DESCRIPTION_MAX ? `${d.slice(0, SLIM_DESCRIPTION_MAX)}…` : d;
-  }
-
-  return {
-    sku,
-    item: {
-      sku: item.sku,
-      condition: item.condition,
-      availability: item.availability,
-      product: product
-        ? {
-            title: product.title,
-            imageUrls: Array.isArray(product.imageUrls)
-              ? product.imageUrls.slice(0, SLIM_IMAGE_URLS_MAX)
-              : undefined,
-            aspects: product.aspects,
-            description,
-          }
-        : undefined,
-    },
-    offers: slimOffers,
-  };
-}
-
 async function fetchRowForSku(
   accessToken: string,
   sku: string
@@ -271,10 +220,8 @@ async function fetchRowForSku(
       primaryImageUrl,
       condition,
       category: null,
-      rawPayload:
-        item != null || offers.length > 0
-          ? buildSlimInventoryRawPayload(sku, item, offers)
-          : null,
+      // Do not attach eBay JSON here: multi-row INSERT + jsonb still exceeds DB/proxy limits for large catalogs.
+      rawPayload: null,
     };
   } catch (e) {
     console.error(`eBay inventory item ${sku}:`, e);

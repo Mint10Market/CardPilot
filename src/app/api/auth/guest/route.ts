@@ -4,15 +4,37 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 
 /**
+ * Base URL for redirects — same policy as eBay OAuth callback: trust NEXT_PUBLIC_APP_URL first
+ * so Host / X-Forwarded-Host spoofing cannot send users to an attacker-controlled origin.
+ * Falls back to the request URL only when the env var is unset (typical local dev).
+ */
+function guestRedirectOrigin(request: Request): string {
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (fromEnv) {
+    try {
+      return new URL(fromEnv).origin;
+    } catch {
+      console.error("[guest] NEXT_PUBLIC_APP_URL is not a valid URL; falling back to request origin");
+    }
+  }
+  if (typeof request.url === "string" && request.url.length > 0) {
+    try {
+      return new URL(request.url).origin;
+    } catch {
+      /* fall through */
+    }
+  }
+  return "http://localhost:3000";
+}
+
+/**
  * GET /api/auth/guest — create an app-only user (no eBay) and sign in.
  * Redirects to /dashboard. Use "Continue without connecting" on the home page.
  * Requires migration 0005_users_optional_ebay_display_name.sql on the DB.
  * Requires SESSION_SECRET (≥32 chars) in Vercel env.
- * Uses the request origin for redirects so the session cookie and destination match (same host).
  */
 export async function GET(request: Request) {
-  const fallback = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const url = typeof request.url === "string" ? new URL(request.url).origin : fallback;
+  const url = guestRedirectOrigin(request);
 
   const secret = process.env.SESSION_SECRET;
   if (!secret || secret.length < 32) {

@@ -4,12 +4,10 @@ import { db } from "@/lib/db";
 import { inventoryItems } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { syncInventoryFromEbay } from "@/lib/ebay-inventory-sync";
+import { safeClientErrorMessage } from "@/lib/safe-client-error";
 
-/**
- * Keep batches small: each row includes large jsonb (`raw_payload`). Huge multi-row INSERTs
- * hit Supabase pooler / max query size limits long before the ~65535 bind-param cap.
- */
-const INSERT_BATCH_SIZE = 50;
+/** Batched INSERT without jsonb payload — moderate batch size keeps transactions reasonable. */
+const INSERT_BATCH_SIZE = 120;
 
 function chunkInsertRows<T>(rows: readonly T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -55,7 +53,7 @@ export async function POST() {
           condition: r.condition,
           category: r.category,
           source: "ebay" as const,
-          rawPayload: r.rawPayload,
+          rawPayload: null,
         }));
         for (const batch of chunkInsertRows(values, INSERT_BATCH_SIZE)) {
           await tx.insert(inventoryItems).values(batch);
@@ -65,10 +63,14 @@ export async function POST() {
 
     return NextResponse.json({ count: rows.length });
   } catch (e) {
+    console.error("[inventory/sync]", e);
     if (e instanceof Error && e.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const message = e instanceof Error ? e.message : "Sync failed";
+    const message = safeClientErrorMessage(
+      e,
+      "Could not save inventory after syncing eBay. Try again in a moment."
+    );
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
