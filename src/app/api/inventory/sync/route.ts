@@ -5,6 +5,9 @@ import { inventoryItems } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { syncInventoryFromEbay } from "@/lib/ebay-inventory-sync";
 
+/** Large catalogs need more than the default ~10s on Vercel (Pro/Enterprise cap). */
+export const maxDuration = 60;
+
 /**
  * POST /api/inventory/sync — sync inventory from eBay for the current user.
  * Fetches all inventory items and offers from eBay Inventory API, replaces

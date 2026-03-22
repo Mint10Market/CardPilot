@@ -16,6 +16,36 @@ type Item = {
   source: string;
 };
 
+/**
+ * Read JSON from a fetch Response without throwing on HTML/plain-text bodies
+ * (Vercel/host timeouts and proxies often return "An error occurred..." instead of JSON).
+ */
+async function parseApiJson<T extends Record<string, unknown>>(
+  res: Response,
+  context: string
+): Promise<T> {
+  const text = await res.text();
+  const trimmed = text.trim();
+  if (!trimmed) {
+    if (!res.ok) {
+      throw new Error(`${context} failed (${res.status}). Empty response.`);
+    }
+    return {} as T;
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const preview = trimmed.replace(/\s+/g, " ").slice(0, 200);
+    const timeoutHint =
+      res.status === 504 || res.status === 502 || res.status === 503 || res.status === 408
+        ? " Request may have timed out — try again with fewer listings or upgrade hosting limits."
+        : "";
+    throw new Error(
+      `${context} (${res.status}): server returned non-JSON.${timeoutHint} ${preview}`
+    );
+  }
+}
+
 export function InventoryList() {
   const { showToast } = useFeedback();
   const [list, setList] = useState<Item[]>([]);
@@ -82,7 +112,7 @@ export function InventoryList() {
     const formData = new FormData();
     formData.set("file", file);
     const res = await fetch("/api/inventory/import", { method: "POST", body: formData });
-    const data = await res.json();
+    const data = await parseApiJson<{ error?: string; imported?: number }>(res, "CSV import");
     if (res.ok) {
       setImportMessage(`Imported ${data.imported} items.`);
       showToast(`Imported ${data.imported} items.`, "success");
@@ -99,8 +129,8 @@ export function InventoryList() {
     setSyncError(null);
     try {
       const res = await fetch("/api/inventory/sync", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Sync failed");
+      const data = await parseApiJson<{ error?: string; count?: number }>(res, "eBay inventory sync");
+      if (!res.ok) throw new Error(data.error || `Sync failed (${res.status})`);
       const msg = `Synced ${data.count ?? 0} items from eBay.`;
       showToast(msg, "success");
       await load();
