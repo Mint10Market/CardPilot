@@ -79,18 +79,35 @@ async function connectionUrlAndOptions(connectionUrl) {
     return { url: raw, options };
   }
 
+  // Direct DB host (db.<ref>.supabase.co) is IPv6-only or has no public A record — CI cannot reach it.
+  if (/^db\.[^.]+\.supabase\.co$/i.test(hostname)) {
+    throw new Error(
+      `DATABASE_URL uses Supabase's direct host "${hostname}" (db.*.supabase.co).\n\n` +
+        `That URL is not suitable for GitHub Actions: it often has no IPv4 DNS record, so migration fails.\n\n` +
+        `Use the Session pooler URI instead:\n` +
+        `  • Supabase → Connect → choose "Session pooler" (or Transaction pooler)\n` +
+        `  • Host looks like aws-0-REGION.pooler.supabase.com — port 6543\n` +
+        `  • Paste that full URI into GitHub → Settings → Secrets → DATABASE_URL\n\n` +
+        `Use the same pooler URL in Vercel for production. See DEPLOY.md.`
+    );
+  }
+
   let ipv4;
   try {
     const result = await dns.promises.lookup(hostname, { family: 4 });
     ipv4 = result.address;
   } catch (err) {
+    const base = `${err instanceof Error ? err.message : String(err)}\n\n`;
+    const poolerHint =
+      hostname.includes("supabase.co") || hostname.includes("supabase.com")
+        ? `If you see "db.*.supabase.co" in DATABASE_URL, switch to the Session pooler URI from Connect (port 6543).\n` +
+          `Otherwise enable Supabase **IPv4 add-on** or use an **IPv4-compatible** connection string.\n`
+        : `Fix: use a Postgres host that resolves to IPv4 from the public internet, or enable your provider's IPv4 option.\n`;
     throw new Error(
-      `${err instanceof Error ? err.message : String(err)}\n\n` +
-        `Could not resolve "${hostname}" to IPv4. GitHub Actions cannot use IPv6 to many Supabase poolers.\n` +
-        `Fix: Supabase Dashboard → Connect → copy the connection string labeled **IPv4 compatible**,\n` +
-        `or enable **Project Settings → Add-ons → IPv4** for a public IPv4 address.\n` +
-        `See DEPLOY.md.\n` +
-        `Local override: set DATABASE_APPLY_SKIP_IPV4_RESOLVE=1 to skip this resolution.`
+      base +
+        `Could not resolve "${hostname}" to IPv4 (GitHub Actions cannot rely on IPv6 to many DB hosts).\n` +
+        poolerHint +
+        `See DEPLOY.md. Local only: DATABASE_APPLY_SKIP_IPV4_RESOLVE=1 skips this step.`
     );
   }
 

@@ -1,8 +1,8 @@
 # Run pending Drizzle migrations against Supabase (or any Postgres) without a local terminal.
 # One-time setup: Repo → Settings → Secrets → Actions → New repository secret
 #   Name: DATABASE_URL
-#   Value: Supabase **pooler** URI (Connect panel, often port 6543). Prefer the host labeled **IPv4 compatible**
-#   in Supabase Connect — GitHub-hosted runners often hit ENETUNREACH if DNS returns IPv6 first.
+#   Value: Supabase **Session pooler** URI from Connect (host aws-0-*.pooler.supabase.com, port 6543).
+#   Do NOT use db.<ref>.supabase.co (direct) — it has no IPv4 for GitHub Actions.
 # Then: Actions → "Apply database migrations" → Run workflow
 
 name: Apply database migrations
