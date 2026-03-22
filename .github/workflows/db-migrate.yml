@@ -26,4 +26,9 @@ jobs:
       - name: Apply migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npm run db:apply
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Repository secret DATABASE_URL is not set. Add it under Settings → Secrets and variables → Actions (Supabase pooler URI, port 6543). CI failures on lint/build do not block this workflow — you can run migrations anytime."
+            exit 1
+          fi
+          npm run db:apply
