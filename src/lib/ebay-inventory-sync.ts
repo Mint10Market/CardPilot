@@ -165,6 +165,57 @@ function inventorySkuConcurrency(): number {
   return 12;
 }
 
+/** Keep JSON small so batched INSERTs stay under pooler / max query size limits. */
+const SLIM_DESCRIPTION_MAX = 6000;
+const SLIM_IMAGE_URLS_MAX = 8;
+
+function buildSlimInventoryRawPayload(
+  sku: string,
+  item: InventoryItemDetail | null,
+  offers: NonNullable<OfferResponse["offers"]>
+): Record<string, unknown> | null {
+  if (!item && offers.length === 0) return null;
+
+  const slimOffers = offers.map((o) => ({
+    offerId: o.offerId,
+    sku: o.sku,
+    availableQuantity: o.availableQuantity,
+    pricingSummary: o.pricingSummary,
+    listing: o.listing,
+  }));
+
+  if (!item) {
+    return { sku, offers: slimOffers };
+  }
+
+  const product = item.product;
+  let description: string | undefined;
+  if (product?.description && typeof product.description === "string") {
+    const d = product.description;
+    description = d.length > SLIM_DESCRIPTION_MAX ? `${d.slice(0, SLIM_DESCRIPTION_MAX)}…` : d;
+  }
+
+  return {
+    sku,
+    item: {
+      sku: item.sku,
+      condition: item.condition,
+      availability: item.availability,
+      product: product
+        ? {
+            title: product.title,
+            imageUrls: Array.isArray(product.imageUrls)
+              ? product.imageUrls.slice(0, SLIM_IMAGE_URLS_MAX)
+              : undefined,
+            aspects: product.aspects,
+            description,
+          }
+        : undefined,
+    },
+    offers: slimOffers,
+  };
+}
+
 async function fetchRowForSku(
   accessToken: string,
   sku: string
@@ -220,9 +271,10 @@ async function fetchRowForSku(
       primaryImageUrl,
       condition,
       category: null,
-      rawPayload: item
-        ? { sku, item: item as unknown as Record<string, unknown>, offers }
-        : null,
+      rawPayload:
+        item != null || offers.length > 0
+          ? buildSlimInventoryRawPayload(sku, item, offers)
+          : null,
     };
   } catch (e) {
     console.error(`eBay inventory item ${sku}:`, e);
@@ -246,10 +298,25 @@ export async function syncInventoryFromEbay(userId: string): Promise<EbayInvento
     offset += limit;
   }
 
+  const uniqueSkus = [...new Set(allSkus)];
+
   const concurrency = inventorySkuConcurrency();
-  const partial = await mapPool(allSkus, concurrency, (sku) =>
+  const partial = await mapPool(uniqueSkus, concurrency, (sku) =>
     fetchRowForSku(accessToken, sku)
   );
 
-  return partial.filter((r): r is EbayInventoryRow => r != null);
+  const rows = partial.filter((r): r is EbayInventoryRow => r != null);
+
+  // One row per ebay_offer_id (global unique) — duplicate SKUs / offer IDs would break INSERT.
+  const byOfferId = new Map<string, EbayInventoryRow>();
+  const withoutOffer: EbayInventoryRow[] = [];
+  for (const r of rows) {
+    if (r.ebayOfferId) {
+      if (!byOfferId.has(r.ebayOfferId)) byOfferId.set(r.ebayOfferId, r);
+    } else {
+      withoutOffer.push(r);
+    }
+  }
+
+  return [...byOfferId.values(), ...withoutOffer];
 }

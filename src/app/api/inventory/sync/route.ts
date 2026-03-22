@@ -5,8 +5,11 @@ import { inventoryItems } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { syncInventoryFromEbay } from "@/lib/ebay-inventory-sync";
 
-/** Postgres bind-parameter limit is ~65535; each row uses ~14 params — stay well under. */
-const INSERT_BATCH_SIZE = 250;
+/**
+ * Keep batches small: each row includes large jsonb (`raw_payload`). Huge multi-row INSERTs
+ * hit Supabase pooler / max query size limits long before the ~65535 bind-param cap.
+ */
+const INSERT_BATCH_SIZE = 50;
 
 function chunkInsertRows<T>(rows: readonly T[], size: number): T[][] {
   const chunks: T[][] = [];
