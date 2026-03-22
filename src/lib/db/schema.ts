@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -8,6 +9,7 @@ import {
   jsonb,
   primaryKey,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // Users: may start without eBay (app-only); connect eBay later in Settings.
@@ -70,7 +72,7 @@ export const inventoryItems = pgTable("inventory_items", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   sku: text("sku"),
-  ebayOfferId: text("ebay_offer_id").unique(),
+  ebayOfferId: text("ebay_offer_id"),
   ebayListingId: text("ebay_listing_id"),
   listingStatus: text("listing_status"),
   title: text("title").notNull(),
@@ -87,7 +89,11 @@ export const inventoryItems = pgTable("inventory_items", {
   rawPayload: jsonb("raw_payload"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (t) => ({
+  userEbayOfferUnique: uniqueIndex("inventory_items_user_ebay_offer_uq")
+    .on(t.userId, t.ebayOfferId)
+    .where(sql`${t.ebayOfferId} IS NOT NULL`),
+}));
 
 // Manual sales (card shows / in-person)
 export const manualSales = pgTable("manual_sales", {

@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 import { inventoryItems } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { syncInventoryFromEbay } from "@/lib/ebay-inventory-sync";
-import { safeClientErrorMessage } from "@/lib/safe-client-error";
+import { normalizeNumeric12_2, optionalNumeric12_2 } from "@/lib/inventory-db-values";
+import { inventorySyncErrorResponse } from "@/lib/inventory-sync-errors";
 
 /** Batched INSERT without jsonb payload — moderate batch size keeps transactions reasonable. */
 const INSERT_BATCH_SIZE = 120;
@@ -47,8 +48,8 @@ export async function POST() {
           listingStatus: r.listingStatus,
           title: r.title,
           quantity: r.quantity,
-          price: r.price,
-          costOfCard: r.costOfCard,
+          price: normalizeNumeric12_2(r.price, "0.00"),
+          costOfCard: optionalNumeric12_2(r.costOfCard),
           primaryImageUrl: r.primaryImageUrl,
           condition: r.condition,
           category: r.category,
@@ -67,10 +68,6 @@ export async function POST() {
     if (e instanceof Error && e.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const message = safeClientErrorMessage(
-      e,
-      "Could not save inventory after syncing eBay. Try again in a moment."
-    );
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(inventorySyncErrorResponse(e), { status: 500 });
   }
 }

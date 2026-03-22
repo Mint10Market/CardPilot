@@ -76,6 +76,7 @@ export function InventoryList() {
   const [availabilityFilter, setAvailabilityFilter] = useState<string>("");
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncHint, setSyncHint] = useState<string | null>(null);
 
   const load = useCallback(() => {
     const params = new URLSearchParams();
@@ -123,10 +124,21 @@ export function InventoryList() {
   const handleSyncFromEbay = async () => {
     setSyncing(true);
     setSyncError(null);
+    setSyncHint(null);
     try {
       const res = await fetch("/api/inventory/sync", { method: "POST" });
-      const data = await parseApiJson<{ error?: string; count?: number }>(res, "eBay inventory sync");
-      if (!res.ok) throw new Error(data.error || `Sync failed (${res.status})`);
+      const data = await parseApiJson<{
+        error?: string;
+        hint?: string;
+        count?: number;
+      }>(res, "eBay inventory sync");
+      if (!res.ok) {
+        const err = data.error || `Sync failed (${res.status})`;
+        setSyncError(err);
+        setSyncHint(typeof data.hint === "string" ? data.hint : null);
+        showToast(err, "error");
+        return;
+      }
       const msg = `Synced ${data.count ?? 0} items from eBay.`;
       showToast(msg, "success");
       await load();
@@ -208,7 +220,12 @@ export function InventoryList() {
           </button>
         </div>
         {importMessage && <span className="text-sm text-[var(--muted)]">{importMessage}</span>}
-        {syncError && <span className="text-sm text-[var(--error)]">{syncError}</span>}
+        {syncError && (
+          <div className="flex flex-col gap-1 text-sm max-w-xl">
+            <span className="text-[var(--error)]">{syncError}</span>
+            {syncHint && <span className="text-[var(--muted)]">{syncHint}</span>}
+          </div>
+        )}
       </div>
 
       {showWizard && (

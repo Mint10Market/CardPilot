@@ -155,7 +155,7 @@ Manual uploads use **POST `/api/uploads/item-image`** (multipart field `file`). 
    - **Recommended:** `npm run db:apply` — runs Drizzle’s migrator on `./drizzle` (records `__drizzle_migrations`; same end result as `db:migrate`). Needs `DATABASE_URL` in `.env.local` (or `.env`).
    - **Or:** `npm run db:migrate` (uses `drizzle-kit`; same `DATABASE_URL` requirement).
    - **Or:** `npm run apply:0006` — alias for `db:apply`.
-   - **Or:** paste `drizzle/0006_inventory_collection_fields.sql` into Supabase → **SQL Editor** if you cannot run Node locally.
+   - **Or:** paste migration SQL from `drizzle/` (e.g. `0006_inventory_collection_fields.sql`, `0007_inventory_offer_per_user_unique.sql`) into Supabase → **SQL Editor** if you cannot run Node locally. **eBay inventory sync** needs 0006 columns and benefits from **0007** (per-user `ebay_offer_id` uniqueness — avoids duplicate-key failures across accounts).
    - **Or (no terminal):** GitHub → **Actions** → **Apply database migrations** → **Run workflow**. Add repository secret **`DATABASE_URL`** once (Supabase pooler URI, same as Vercel).
 
 **eBay listing cost:** Optional env **`EBAY_INVENTORY_COST_ASPECT_NAMES`** (comma-separated aspect names) if your tool uses custom item specifics. See `.env.example`.
