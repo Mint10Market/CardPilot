@@ -11,8 +11,13 @@ type Item = {
   sku: string | null;
   quantity: number;
   price: string;
+  costOfCard: string | null;
+  primaryImageUrl: string | null;
   condition: string | null;
   category: string | null;
+  itemKind: string | null;
+  sportOrTcg: string | null;
+  extraDetails: Record<string, unknown> | null;
   source: string;
 };
 
@@ -20,11 +25,56 @@ export function InventoryEditForm({ item }: { item: Item }) {
   const router = useRouter();
   const { showToast } = useFeedback();
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState(item.primaryImageUrl ?? "");
+  const [extraJson, setExtraJson] = useState(() =>
+    item.extraDetails && Object.keys(item.extraDetails).length
+      ? JSON.stringify(item.extraDetails, null, 2)
+      : ""
+  );
+
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      const res = await fetch("/api/uploads/item-image", { method: "POST", body: fd });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (data.url) setImageUrl(data.url);
+      showToast("Image uploaded.", "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Upload failed", "error");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
+    let extra: Record<string, unknown> | null = null;
+    const trimmed = extraJson.trim();
+    if (trimmed) {
+      try {
+        const p = JSON.parse(trimmed) as unknown;
+        if (!p || typeof p !== "object" || Array.isArray(p)) {
+          showToast("Extra details must be a JSON object.", "error");
+          return;
+        }
+        extra = p as Record<string, unknown>;
+      } catch {
+        showToast("Invalid JSON in extra details.", "error");
+        return;
+      }
+    } else {
+      extra = {};
+    }
+
     setSaving(true);
     try {
       const res = await fetch(`/api/inventory/${item.id}`, {
@@ -37,10 +87,15 @@ export function InventoryEditForm({ item }: { item: Item }) {
           price: data.get("price") || "0",
           condition: data.get("condition") || undefined,
           category: data.get("category") || undefined,
+          costOfCard: (data.get("costOfCard") as string)?.trim() || null,
+          primaryImageUrl: imageUrl.trim() || null,
+          itemKind: (data.get("itemKind") as string) || null,
+          sportOrTcg: (data.get("sportOrTcg") as string)?.trim() || null,
+          extraDetails: extra,
         }),
       });
       if (!res.ok) {
-        const d = await res.json();
+        const d = (await res.json()) as { error?: string };
         throw new Error(d.error || "Update failed");
       }
       showToast("Item updated.", "success");
@@ -107,6 +162,65 @@ export function InventoryEditForm({ item }: { item: Item }) {
           </div>
         </div>
         <div>
+          <label htmlFor="costOfCard" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+            Cost of card (COG)
+          </label>
+          <input
+            id="costOfCard"
+            name="costOfCard"
+            type="text"
+            inputMode="decimal"
+            defaultValue={item.costOfCard ?? ""}
+            placeholder="0.00"
+            className={inputClass}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="itemKind" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+              Item kind
+            </label>
+            <select
+              id="itemKind"
+              name="itemKind"
+              defaultValue={item.itemKind ?? ""}
+              className={inputClass}
+            >
+              <option value="">—</option>
+              <option value="card">Card</option>
+              <option value="collectible">Collectible</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="sportOrTcg" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+              Sport / TCG label
+            </label>
+            <input
+              id="sportOrTcg"
+              name="sportOrTcg"
+              defaultValue={item.sportOrTcg ?? ""}
+              placeholder="e.g. Baseball, Pokémon"
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <div>
+          <span className="block text-sm font-medium text-[var(--foreground)] mb-1">Image</span>
+          <div className="flex flex-col gap-2">
+            <input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="Image URL (or upload below)"
+              className={inputClass}
+            />
+            <label className="text-sm text-[var(--accent)] cursor-pointer">
+              <span className="underline">Upload file</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageFile} disabled={uploading} />
+              {uploading && <span className="text-[var(--muted)] ml-2">Uploading…</span>}
+            </label>
+          </div>
+        </div>
+        <div>
           <label htmlFor="condition" className="block text-sm font-medium text-[var(--foreground)] mb-1">
             Condition
           </label>
@@ -126,6 +240,18 @@ export function InventoryEditForm({ item }: { item: Item }) {
             name="category"
             defaultValue={item.category ?? ""}
             className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="extraJson" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+            Extra details (JSON)
+          </label>
+          <textarea
+            id="extraJson"
+            rows={4}
+            value={extraJson}
+            onChange={(e) => setExtraJson(e.target.value)}
+            className={`${inputClass} font-mono text-sm`}
           />
         </div>
         <div className="flex gap-3">

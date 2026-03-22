@@ -29,6 +29,10 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       title: string;
       category?: string;
+      itemKind?: string | null;
+      sportOrTcg?: string | null;
+      extraDetails?: Record<string, unknown> | null;
+      imageUrl?: string | null;
       year?: string;
       setName?: string;
       playerOrSubject?: string;
@@ -51,12 +55,20 @@ export async function POST(request: Request) {
       body.acquiredDate && String(body.acquiredDate).trim()
         ? new Date(body.acquiredDate)
         : null;
+    const extra =
+      body.extraDetails != null && typeof body.extraDetails === "object" && !Array.isArray(body.extraDetails)
+        ? body.extraDetails
+        : null;
     const [created] = await db
       .insert(personalCollectionItems)
       .values({
         userId: user.id,
         title: body.title.trim(),
         category: body.category?.trim() ?? null,
+        itemKind: body.itemKind?.trim() || null,
+        sportOrTcg: body.sportOrTcg?.trim() || null,
+        extraDetails: extra,
+        imageUrl: body.imageUrl?.trim() || null,
         year: body.year?.trim() ?? null,
         setName: body.setName?.trim() ?? null,
         playerOrSubject: body.playerOrSubject?.trim() ?? null,

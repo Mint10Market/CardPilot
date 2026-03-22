@@ -71,11 +71,18 @@ export const inventoryItems = pgTable("inventory_items", {
     .references(() => users.id, { onDelete: "cascade" }),
   sku: text("sku"),
   ebayOfferId: text("ebay_offer_id").unique(),
+  ebayListingId: text("ebay_listing_id"),
+  listingStatus: text("listing_status"),
   title: text("title").notNull(),
   quantity: integer("quantity").notNull().default(0),
   price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+  costOfCard: decimal("cost_of_card", { precision: 12, scale: 2 }),
+  primaryImageUrl: text("primary_image_url"),
   condition: text("condition"),
   category: text("category"),
+  itemKind: text("item_kind"), // 'card' | 'collectible'
+  sportOrTcg: text("sport_or_tcg"),
+  extraDetails: jsonb("extra_details").$type<Record<string, unknown>>(),
   source: text("source").notNull(), // 'ebay' | 'manual'
   rawPayload: jsonb("raw_payload"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -238,6 +245,10 @@ export const personalCollectionItems = pgTable("personal_collection_items", {
     .references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   category: text("category"), // e.g. sport
+  itemKind: text("item_kind"), // 'card' | 'collectible'
+  sportOrTcg: text("sport_or_tcg"),
+  extraDetails: jsonb("extra_details").$type<Record<string, unknown>>(),
+  imageUrl: text("image_url"),
   year: text("year"),
   setName: text("set_name"),
   playerOrSubject: text("player_or_subject"),

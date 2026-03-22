@@ -35,6 +35,10 @@ export async function PATCH(
     const body = (await request.json()) as {
       title?: string;
       category?: string;
+      itemKind?: string | null;
+      sportOrTcg?: string | null;
+      extraDetails?: Record<string, unknown> | null;
+      imageUrl?: string | null;
       year?: string;
       setName?: string;
       playerOrSubject?: string;
@@ -46,6 +50,10 @@ export async function PATCH(
       updatedAt: Date;
       title?: string;
       category?: string | null;
+      itemKind?: string | null;
+      sportOrTcg?: string | null;
+      extraDetails?: Record<string, unknown> | null;
+      imageUrl?: string | null;
       year?: string | null;
       setName?: string | null;
       playerOrSubject?: string | null;
@@ -55,6 +63,17 @@ export async function PATCH(
     } = { updatedAt: new Date() };
     if (body.title !== undefined) update.title = body.title.trim();
     if (body.category !== undefined) update.category = body.category?.trim() ?? null;
+    if (body.itemKind !== undefined) update.itemKind = body.itemKind?.trim() || null;
+    if (body.sportOrTcg !== undefined) update.sportOrTcg = body.sportOrTcg?.trim() || null;
+    if (body.extraDetails !== undefined) {
+      update.extraDetails =
+        body.extraDetails != null &&
+        typeof body.extraDetails === "object" &&
+        !Array.isArray(body.extraDetails)
+          ? body.extraDetails
+          : null;
+    }
+    if (body.imageUrl !== undefined) update.imageUrl = body.imageUrl?.trim() || null;
     if (body.year !== undefined) update.year = body.year?.trim() ?? null;
     if (body.setName !== undefined) update.setName = body.setName?.trim() ?? null;
     if (body.playerOrSubject !== undefined)

@@ -1,10 +1,12 @@
 import { db } from "@/lib/db";
 import { inventoryItems } from "@/lib/db/schema";
-import { eq, and, ilike, asc } from "drizzle-orm";
+import { eq, and, ilike, asc, gt } from "drizzle-orm";
 
 export type InventoryFilters = {
   source?: "ebay" | "manual";
   search?: string;
+  /** "in_stock" = quantity > 0, "sold_out" = quantity === 0 */
+  availability?: "in_stock" | "sold_out";
 };
 
 export async function getInventoryItems(userId: string, filters: InventoryFilters = {}) {
@@ -18,6 +20,12 @@ export async function getInventoryItems(userId: string, filters: InventoryFilter
       ilike(inventoryItems.title, term)
       // Could add: or(ilike(inventoryItems.sku, term), ...)
     );
+  }
+  if (filters.availability === "in_stock") {
+    conditions.push(gt(inventoryItems.quantity, 0));
+  }
+  if (filters.availability === "sold_out") {
+    conditions.push(eq(inventoryItems.quantity, 0));
   }
   return db.query.inventoryItems.findMany({
     where: and(...conditions),

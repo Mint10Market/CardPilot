@@ -3,6 +3,7 @@
  */
 
 import { getValidAccessToken } from "./ebay-sync";
+import { extractInventoryCost } from "./ebay-cost-extract";
 
 const EBAY_INVENTORY_BASE = "https://api.ebay.com/sell/inventory/v1";
 const EBAY_SANDBOX_INVENTORY_BASE = "https://api.sandbox.ebay.com/sell/inventory/v1";
@@ -32,7 +33,12 @@ type InventoryItemsResponse = {
 
 type InventoryItemDetail = {
   sku?: string;
-  product?: { title?: string };
+  product?: {
+    title?: string;
+    description?: string;
+    imageUrls?: string[];
+    aspects?: Record<string, unknown>;
+  };
   availability?: {
     shipToLocationAvailability?: { quantity?: number };
     pickupAtLocationAvailability?: Array<{ quantity?: number }>;
@@ -53,9 +59,13 @@ type OfferResponse = {
 export type EbayInventoryRow = {
   sku: string | null;
   ebayOfferId: string | null;
+  ebayListingId: string | null;
+  listingStatus: string | null;
   title: string;
   quantity: number;
   price: string;
+  costOfCard: string | null;
+  primaryImageUrl: string | null;
   condition: string | null;
   category: string | null;
   rawPayload: Record<string, unknown> | null;
@@ -175,13 +185,39 @@ async function fetchRowForSku(
         ? String(Number(firstOffer.pricingSummary.price.value))
         : "0";
     const ebayOfferId = firstOffer?.offerId ?? null;
+    const ebayListingId =
+      firstOffer?.listing?.listingId != null && firstOffer.listing.listingId !== ""
+        ? String(firstOffer.listing.listingId)
+        : null;
+    const listingStatus =
+      firstOffer?.listing?.listingStatus != null && firstOffer.listing.listingStatus !== ""
+        ? String(firstOffer.listing.listingStatus)
+        : null;
+
+    const product = item?.product;
+    const imageUrls = product?.imageUrls;
+    const primaryImageUrl =
+      Array.isArray(imageUrls) && imageUrls.length > 0 && typeof imageUrls[0] === "string"
+        ? imageUrls[0].trim() || null
+        : null;
+    const aspects =
+      product?.aspects != null && typeof product.aspects === "object"
+        ? (product.aspects as Record<string, unknown>)
+        : null;
+    const description = product?.description;
+    const costParsed = extractInventoryCost(aspects, description);
+    const costOfCard = costParsed;
 
     return {
       sku,
       ebayOfferId,
+      ebayListingId,
+      listingStatus,
       title,
       quantity,
       price,
+      costOfCard,
+      primaryImageUrl,
       condition,
       category: null,
       rawPayload: item

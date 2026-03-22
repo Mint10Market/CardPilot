@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Card } from "@/components/ui/Card";
 import { useFeedback } from "@/components/FeedbackContext";
+import { AddItemWizard } from "./AddItemWizard";
+import { ebayListingManageUrl } from "@/lib/ebay-listing-url";
+import { inventoryStockBadge } from "@/lib/inventory-stock-badge";
 
 type Item = {
   id: string;
@@ -11,9 +15,15 @@ type Item = {
   sku: string | null;
   quantity: number;
   price: string;
+  costOfCard: string | null;
+  primaryImageUrl: string | null;
   condition: string | null;
   category: string | null;
   source: string;
+  ebayListingId: string | null;
+  listingStatus: string | null;
+  itemKind: string | null;
+  sportOrTcg: string | null;
 };
 
 /**
@@ -46,14 +56,24 @@ async function parseApiJson<T extends Record<string, unknown>>(
   }
 }
 
+function stockBadge(item: Item) {
+  return inventoryStockBadge({
+    source: item.source,
+    quantity: item.quantity,
+    listingStatus: item.listingStatus,
+  });
+}
+
 export function InventoryList() {
   const { showToast } = useFeedback();
   const [list, setList] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [showAdd, setShowAdd] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string>("");
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>("");
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
 
@@ -61,11 +81,14 @@ export function InventoryList() {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (sourceFilter === "ebay" || sourceFilter === "manual") params.set("source", sourceFilter);
+    if (availabilityFilter === "in_stock" || availabilityFilter === "sold_out") {
+      params.set("availability", availabilityFilter);
+    }
     return fetch(`/api/inventory?${params.toString()}`)
       .then((r) => r.json())
       .then(setList)
       .catch(() => setList([]));
-  }, [search, sourceFilter]);
+  }, [search, sourceFilter, availabilityFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,33 +100,6 @@ export function InventoryList() {
       cancelled = true;
     };
   }, [load]);
-
-  const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const data = new FormData(form);
-    const res = await fetch("/api/inventory", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: data.get("title"),
-        sku: data.get("sku") || undefined,
-        quantity: Number(data.get("quantity")) || 0,
-        price: data.get("price") || "0",
-        condition: data.get("condition") || undefined,
-        category: data.get("category") || undefined,
-      }),
-    });
-    if (res.ok) {
-      setShowAdd(false);
-      form.reset();
-      showToast("Item added.", "success");
-      load();
-    } else {
-      const d = await res.json();
-      showToast(d.error || "Add failed", "error");
-    }
-  };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -186,22 +182,44 @@ export function InventoryList() {
         </button>
         <button
           type="button"
-          onClick={() => setShowAdd(!showAdd)}
+          onClick={() => setShowWizard(true)}
           className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] px-4 py-2 text-sm font-medium hover:border-[var(--muted)] min-h-[var(--touch-target-min)]"
         >
-          {showAdd ? "Cancel" : "Add item"}
+          Add item
         </button>
         <label className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] px-4 py-2 text-sm font-medium cursor-pointer hover:border-[var(--muted)] min-h-[var(--touch-target-min)] inline-flex items-center">
           Import CSV
           <input type="file" accept=".csv" className="hidden" onChange={handleImport} />
         </label>
-        {importMessage && (
-          <span className="text-sm text-[var(--muted)]">{importMessage}</span>
-        )}
-        {syncError && (
-          <span className="text-sm text-[var(--error)]">{syncError}</span>
-        )}
+        <div className="flex rounded-[var(--radius)] border border-[var(--border)] overflow-hidden text-sm">
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-2 ${viewMode === "grid" ? "bg-[var(--accent)]/15 font-medium" : "bg-[var(--card)]"}`}
+          >
+            Cards
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`px-3 py-2 border-l border-[var(--border)] ${viewMode === "table" ? "bg-[var(--accent)]/15 font-medium" : "bg-[var(--card)]"}`}
+          >
+            Table
+          </button>
+        </div>
+        {importMessage && <span className="text-sm text-[var(--muted)]">{importMessage}</span>}
+        {syncError && <span className="text-sm text-[var(--error)]">{syncError}</span>}
       </div>
+
+      {showWizard && (
+        <AddItemWizard
+          onClose={() => setShowWizard(false)}
+          onSuccess={() => {
+            load();
+          }}
+        />
+      )}
+
       <div className="flex flex-wrap gap-3 items-center">
         <input
           type="search"
@@ -219,82 +237,178 @@ export function InventoryList() {
           <option value="ebay">eBay</option>
           <option value="manual">Manual</option>
         </select>
+        <select
+          value={availabilityFilter}
+          onChange={(e) => setAvailabilityFilter(e.target.value)}
+          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--foreground)]"
+        >
+          <option value="">All availability</option>
+          <option value="in_stock">In stock</option>
+          <option value="sold_out">Sold out</option>
+        </select>
       </div>
-      {showAdd && (
-        <Card className="max-w-md">
-          <form onSubmit={handleAdd} className="space-y-3">
-            <input name="title" placeholder="Title *" required className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
-            <input name="sku" placeholder="SKU" className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
-            <div className="flex gap-3">
-              <input name="quantity" type="number" min={0} placeholder="Qty" defaultValue={0} className="w-24 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
-              <input name="price" type="text" placeholder="Price *" defaultValue="0" className="flex-1 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
-            </div>
-            <input name="condition" placeholder="Condition" className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
-            <input name="category" placeholder="Category" className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-[var(--foreground)]" />
-            <button type="submit" className="rounded-[var(--radius)] bg-[var(--accent)] text-[var(--accent-foreground)] px-3 py-1.5 text-sm font-medium hover:opacity-90">
-              Save
-            </button>
-          </form>
+
+      {list.length === 0 ? (
+        <Card className="p-6 text-[var(--muted)] text-sm">
+          No items for sale. Sync from eBay, use Add item, or import a CSV. Required columns: title, price. Optional:
+          sku, quantity, condition, category.
+        </Card>
+      ) : viewMode === "grid" ? (
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 list-none p-0 m-0">
+          {list.map((i) => {
+            const badge = stockBadge(i);
+            const editHref = i.ebayListingId ? ebayListingManageUrl(i.ebayListingId) : null;
+            return (
+              <li key={i.id}>
+                <Card className="overflow-hidden p-0 h-full flex flex-col">
+                  <Link href={`/inventory/${i.id}`} className="block relative aspect-[4/3] bg-[var(--table-header)]">
+                    {i.primaryImageUrl ? (
+                      <Image
+                        src={i.primaryImageUrl}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="absolute inset-0 flex items-center justify-center text-xs text-[var(--muted)]">
+                        No image
+                      </span>
+                    )}
+                  </Link>
+                  <div className="p-3 flex flex-col gap-2 flex-1">
+                    <div className="flex flex-wrap gap-1">
+                      <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--muted)]/20 text-[var(--muted)] capitalize">
+                        {i.source}
+                      </span>
+                    </div>
+                    <Link
+                      href={`/inventory/${i.id}`}
+                      className="font-medium text-[var(--foreground)] hover:text-[var(--accent)] line-clamp-2"
+                    >
+                      {i.title}
+                    </Link>
+                    <div className="text-sm text-[var(--muted)] flex flex-wrap gap-x-3 gap-y-1">
+                      <span>{formatPrice(i.price)}</span>
+                      <span>Qty {i.quantity}</span>
+                      {i.costOfCard != null && <span>Cost {formatPrice(String(i.costOfCard))}</span>}
+                    </div>
+                    <div className="mt-auto flex flex-wrap gap-2 pt-2 border-t border-[var(--border)]">
+                      {i.source === "ebay" ? (
+                        editHref ? (
+                          <a
+                            href={editHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-[var(--accent)] hover:underline"
+                          >
+                            Edit on eBay
+                          </a>
+                        ) : (
+                          <span className="text-sm text-[var(--muted)]" title="Sync again to pick up listing ID">
+                            Edit on eBay
+                          </span>
+                        )
+                      ) : (
+                        <>
+                          <Link href={`/inventory/${i.id}`} className="text-sm text-[var(--accent)] hover:underline">
+                            Edit
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(i.id, i.title, i.source)}
+                            className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+                          >
+                            Remove
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[720px]">
+              <thead>
+                <tr className="border-b border-[var(--border)] bg-[var(--table-header)]">
+                  <th className="p-3 font-medium text-[var(--foreground)]">Title</th>
+                  <th className="p-3 font-medium text-[var(--foreground)]">SKU</th>
+                  <th className="p-3 font-medium text-[var(--foreground)]">Qty</th>
+                  <th className="p-3 font-medium text-[var(--foreground)]">Price</th>
+                  <th className="p-3 font-medium text-[var(--foreground)]">Cost</th>
+                  <th className="p-3 font-medium text-[var(--foreground)]">Status</th>
+                  <th className="p-3 font-medium text-[var(--foreground)]">Source</th>
+                  <th className="p-3 font-medium text-[var(--foreground)]">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((i) => {
+                  const badge = stockBadge(i);
+                  const editHref = i.ebayListingId ? ebayListingManageUrl(i.ebayListingId) : null;
+                  return (
+                    <tr key={i.id} className="border-b border-[var(--border)] hover:bg-[var(--table-header)]">
+                      <td className="p-3">
+                        <Link href={`/inventory/${i.id}`} className="text-[var(--accent)] hover:underline">
+                          {i.title}
+                        </Link>
+                      </td>
+                      <td className="p-3 text-[var(--muted)] font-mono text-xs">{i.sku ?? "—"}</td>
+                      <td className="p-3">{i.quantity}</td>
+                      <td className="p-3">{formatPrice(i.price)}</td>
+                      <td className="p-3 text-[var(--muted)]">
+                        {i.costOfCard != null ? formatPrice(String(i.costOfCard)) : "—"}
+                      </td>
+                      <td className="p-3">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded ${badge.className}`}>{badge.label}</span>
+                      </td>
+                      <td className="p-3 capitalize text-[var(--muted)]">{i.source}</td>
+                      <td className="p-3">
+                        {i.source === "manual" ? (
+                          <>
+                            <Link href={`/inventory/${i.id}`} className="text-[var(--accent)] hover:underline mr-2">
+                              Edit
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(i.id, i.title, i.source)}
+                              className="text-[var(--muted)] hover:text-[var(--foreground)]"
+                            >
+                              Remove
+                            </button>
+                          </>
+                        ) : editHref ? (
+                          <a
+                            href={editHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[var(--accent)] hover:underline"
+                          >
+                            Edit on eBay
+                          </a>
+                        ) : (
+                          <span className="text-[var(--muted)] text-xs" title="Sync again to pick up listing ID">
+                            eBay (no ID)
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </Card>
       )}
-      <Card className="overflow-hidden p-0">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--table-header)]">
-              <th className="p-3 font-medium text-[var(--foreground)]">Title</th>
-              <th className="p-3 font-medium text-[var(--foreground)]">SKU</th>
-              <th className="p-3 font-medium text-[var(--foreground)]">Qty</th>
-              <th className="p-3 font-medium text-[var(--foreground)]">Price</th>
-              <th className="p-3 font-medium text-[var(--foreground)]">Condition</th>
-              <th className="p-3 font-medium text-[var(--foreground)]">Category</th>
-              <th className="p-3 font-medium text-[var(--foreground)]">Source</th>
-              <th className="p-3 font-medium text-[var(--foreground)]">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="p-4 text-[var(--muted)]">
-                  No items for sale. Sync from eBay, add an item, or import a CSV. Required columns: title, price. Optional: sku, quantity, condition, category.
-                </td>
-              </tr>
-            ) : (
-              list.map((i) => (
-                <tr key={i.id} className="border-b border-[var(--border)] hover:bg-[var(--table-header)]">
-                  <td className="p-3 text-[var(--foreground)]">{i.title}</td>
-                  <td className="p-3 text-[var(--muted)] font-mono">{i.sku ?? "—"}</td>
-                  <td className="p-3">{i.quantity}</td>
-                  <td className="p-3">{formatPrice(i.price)}</td>
-                  <td className="p-3 text-[var(--muted)]">{i.condition ?? "—"}</td>
-                  <td className="p-3 text-[var(--muted)]">{i.category ?? "—"}</td>
-                  <td className="p-3 capitalize text-[var(--muted)]">{i.source}</td>
-                  <td className="p-3">
-                    {i.source === "manual" ? (
-                      <>
-                        <Link
-                          href={`/inventory/${i.id}`}
-                          className="text-[var(--accent)] hover:underline mr-2"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(i.id, i.title, i.source)}
-                          className="text-[var(--muted)] hover:text-[var(--foreground)]"
-                        >
-                          Remove
-                        </button>
-                      </>
-                    ) : (
-                      <span className="text-[var(--muted)]">Edit on eBay</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </Card>
+
       <p className="text-xs text-[var(--muted)]">
         CSV format: title (required), price (required). Optional columns: sku, quantity, condition, category.{" "}
         <button

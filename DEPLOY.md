@@ -140,6 +140,22 @@ Vercel Hobby does not support Cron. Use **Trigger.dev** (free tier) so eBay sync
 
 ---
 
+## Supabase Storage (inventory / collection images)
+
+Manual uploads use **POST `/api/uploads/item-image`** (multipart field `file`). Configure:
+
+1. In Supabase → **Storage** → **New bucket** → name e.g. **`item-images`** → enable **Public bucket** (so `getPublicUrl` works) **or** keep private and switch the API to signed URLs later.
+2. If the bucket is public, optional: add a policy so only authenticated users can upload (service role bypasses RLS; the app uses **SUPABASE_SERVICE_ROLE_KEY** server-side only).
+3. Set env vars (Vercel + `.env.local`):
+   - **`NEXT_PUBLIC_SUPABASE_URL`** — project URL (e.g. `https://xxx.supabase.co`)
+   - **`SUPABASE_SERVICE_ROLE_KEY`** — **server only**, never expose to the client
+   - **`SUPABASE_ITEM_IMAGES_BUCKET`** (optional) — defaults to `item-images`
+4. Run DB migration **`0006_inventory_collection_fields`** so `primary_image_url` / `image_url` columns exist (`npm run db:migrate` or apply `drizzle/0006_inventory_collection_fields.sql` in the SQL editor).
+
+**eBay listing cost:** Optional env **`EBAY_INVENTORY_COST_ASPECT_NAMES`** (comma-separated aspect names) if your tool uses custom item specifics. See `.env.example`.
+
+---
+
 ## 5. After first deploy
 
 1. In Vercel → Project → **Settings → Environment Variables**, set:
