@@ -127,6 +127,74 @@ function quantityFromItem(item: InventoryItemDetail): number {
 }
 
 /**
+ * Run async work over items with a bounded concurrency (avoids serial SKU loops that exceed serverless timeouts).
+ */
+async function mapPool<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const runWorker = async () => {
+    while (true) {
+      const i = next++;
+      if (i >= items.length) break;
+      results[i] = await worker(items[i]!, i);
+    }
+  };
+  const n = Math.min(Math.max(1, concurrency), Math.max(1, items.length));
+  await Promise.all(Array.from({ length: n }, () => runWorker()));
+  return results;
+}
+
+function inventorySkuConcurrency(): number {
+  const raw = process.env.EBAY_INVENTORY_SYNC_CONCURRENCY;
+  const parsed = raw != null ? Number(raw) : NaN;
+  if (Number.isFinite(parsed) && parsed >= 1) return Math.min(25, Math.floor(parsed));
+  return 12;
+}
+
+async function fetchRowForSku(
+  accessToken: string,
+  sku: string
+): Promise<EbayInventoryRow | null> {
+  try {
+    const [item, offersRes] = await Promise.all([
+      fetchInventoryItem(accessToken, sku),
+      fetchOffersForSku(accessToken, sku),
+    ]);
+    const title = item?.product?.title?.trim() || `eBay item ${sku}`;
+    const quantity = item ? quantityFromItem(item) : 0;
+    const condition = item?.condition?.trim() ?? null;
+
+    const offers = offersRes?.offers ?? [];
+    const firstOffer = offers[0];
+    const price =
+      firstOffer?.pricingSummary?.price?.value != null
+        ? String(Number(firstOffer.pricingSummary.price.value))
+        : "0";
+    const ebayOfferId = firstOffer?.offerId ?? null;
+
+    return {
+      sku,
+      ebayOfferId,
+      title,
+      quantity,
+      price,
+      condition,
+      category: null,
+      rawPayload: item
+        ? { sku, item: item as unknown as Record<string, unknown>, offers }
+        : null,
+    };
+  } catch (e) {
+    console.error(`eBay inventory item ${sku}:`, e);
+    return null;
+  }
+}
+
+/**
  * Fetch all inventory items and their offers for the given user, normalize to rows for DB.
  */
 export async function syncInventoryFromEbay(userId: string): Promise<EbayInventoryRow[]> {
@@ -142,44 +210,10 @@ export async function syncInventoryFromEbay(userId: string): Promise<EbayInvento
     offset += limit;
   }
 
-  const rows: EbayInventoryRow[] = [];
+  const concurrency = inventorySkuConcurrency();
+  const partial = await mapPool(allSkus, concurrency, (sku) =>
+    fetchRowForSku(accessToken, sku)
+  );
 
-  for (const sku of allSkus) {
-    try {
-      const [item, offersRes] = await Promise.all([
-        fetchInventoryItem(accessToken, sku),
-        fetchOffersForSku(accessToken, sku),
-      ]);
-      const title =
-        item?.product?.title?.trim() || `eBay item ${sku}`;
-      const quantity = item ? quantityFromItem(item) : 0;
-      const condition = item?.condition?.trim() ?? null;
-
-      const offers = offersRes?.offers ?? [];
-      const firstOffer = offers[0];
-      const price =
-        firstOffer?.pricingSummary?.price?.value != null
-          ? String(Number(firstOffer.pricingSummary.price.value))
-          : "0";
-      const ebayOfferId = firstOffer?.offerId ?? null;
-
-      rows.push({
-        sku,
-        ebayOfferId,
-        title,
-        quantity,
-        price,
-        condition,
-        category: null,
-        rawPayload: item
-          ? { sku, item: item as unknown as Record<string, unknown>, offers }
-          : null,
-      });
-    } catch (e) {
-      console.error(`eBay inventory item ${sku}:`, e);
-      // Continue with next SKU
-    }
-  }
-
-  return rows;
+  return partial.filter((r): r is EbayInventoryRow => r != null);
 }

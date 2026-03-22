@@ -5,8 +5,11 @@ import { inventoryItems } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { syncInventoryFromEbay } from "@/lib/ebay-inventory-sync";
 
-/** Large catalogs need more than the default ~10s on Vercel (Pro/Enterprise cap). */
-export const maxDuration = 60;
+/**
+ * Inventory sync does many eBay calls; serial runs hit FUNCTION_INVOCATION_TIMEOUT.
+ * Pro allows up to 300s; Hobby is capped at 10s (use CSV or a background job for large stores).
+ */
+export const maxDuration = 300;
 
 /**
  * POST /api/inventory/sync — sync inventory from eBay for the current user.
