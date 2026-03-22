@@ -5,6 +5,17 @@ import { inventoryItems } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { syncInventoryFromEbay } from "@/lib/ebay-inventory-sync";
 
+/** Postgres bind-parameter limit is ~65535; each row uses ~14 params — stay well under. */
+const INSERT_BATCH_SIZE = 250;
+
+function chunkInsertRows<T>(rows: readonly T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < rows.length; i += size) {
+    chunks.push(rows.slice(i, i + size));
+  }
+  return chunks;
+}
+
 /**
  * Inventory sync does many eBay calls; serial runs hit FUNCTION_INVOCATION_TIMEOUT.
  * Pro allows up to 300s; Hobby is capped at 10s (use CSV or a background job for large stores).
@@ -27,24 +38,25 @@ export async function POST() {
         .where(and(eq(inventoryItems.userId, user.id), eq(inventoryItems.source, "ebay")));
 
       if (rows.length > 0) {
-        await tx.insert(inventoryItems).values(
-          rows.map((r) => ({
-            userId: user.id,
-            sku: r.sku,
-            ebayOfferId: r.ebayOfferId,
-            ebayListingId: r.ebayListingId,
-            listingStatus: r.listingStatus,
-            title: r.title,
-            quantity: r.quantity,
-            price: r.price,
-            costOfCard: r.costOfCard,
-            primaryImageUrl: r.primaryImageUrl,
-            condition: r.condition,
-            category: r.category,
-            source: "ebay" as const,
-            rawPayload: r.rawPayload,
-          }))
-        );
+        const values = rows.map((r) => ({
+          userId: user.id,
+          sku: r.sku,
+          ebayOfferId: r.ebayOfferId,
+          ebayListingId: r.ebayListingId,
+          listingStatus: r.listingStatus,
+          title: r.title,
+          quantity: r.quantity,
+          price: r.price,
+          costOfCard: r.costOfCard,
+          primaryImageUrl: r.primaryImageUrl,
+          condition: r.condition,
+          category: r.category,
+          source: "ebay" as const,
+          rawPayload: r.rawPayload,
+        }));
+        for (const batch of chunkInsertRows(values, INSERT_BATCH_SIZE)) {
+          await tx.insert(inventoryItems).values(batch);
+        }
       }
     });
 
