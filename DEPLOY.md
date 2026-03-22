@@ -158,6 +158,7 @@ Manual uploads use **POST `/api/uploads/item-image`** (multipart field `file`). 
    - **Or:** paste migration SQL from `drizzle/` (e.g. `0006_inventory_collection_fields.sql`, `0007_inventory_offer_per_user_unique.sql`) into Supabase → **SQL Editor** if you cannot run Node locally. **eBay inventory sync** needs 0006 columns and benefits from **0007** (per-user `ebay_offer_id` uniqueness — avoids duplicate-key failures across accounts).
    - **Or (no terminal):** GitHub → **Actions** → **Apply database migrations** → **Run workflow**. Add repository secret **`DATABASE_URL`** once (Supabase pooler URI, same as Vercel).
    - **GitHub Actions `ENETUNREACH` / IPv6 (`2600:…:6543`):** `npm run db:apply` resolves the DB hostname to **IPv4** and connects to that address (TLS **SNI** uses the real hostname). If lookup fails with “No IPv4”, use Supabase → **Connect** → **IPv4-compatible** pooler string, or enable the [IPv4 add-on](https://supabase.com/docs/guides/platform/ipv4-address). To skip resolution (rare): `DATABASE_APPLY_SKIP_IPV4_RESOLVE=1`.
+   - **`column … already exists` (42701) on migrate:** Often the DB was partially updated (manual SQL or an old one-off script) before Drizzle recorded the migration. Migrations use `ADD COLUMN IF NOT EXISTS` where needed so a re-run can finish. If Drizzle reports a **checksum mismatch** for an old migration file, do not edit that file on DBs that already applied it — ask for help or baseline `__drizzle_migrations`.
 
 **eBay listing cost:** Optional env **`EBAY_INVENTORY_COST_ASPECT_NAMES`** (comma-separated aspect names) if your tool uses custom item specifics. See `.env.example`.
 
@@ -173,7 +174,7 @@ Manual uploads use **POST `/api/uploads/item-image`** (multipart field `file`). 
    `https://card-pilot.vercel.app/api/auth/ebay/callback`
 3. (Optional) Run DB migrations if needed:  
    `DATABASE_URL=your_supabase_url npm run db:migrate`  
-   (or `npm run db:push` if you use push). **Guest sign-in (“Continue without connecting”) requires migration `0005_users_optional_ebay_display_name.sql`**; without it, `/api/auth/guest` returns 500.
+   (or `npm run db:push` if you use push). **Guest sign-in (“Continue without connecting”)** needs migration **`0005_personal_collection_items`** (nullable eBay columns + `users.display_name`); without it, `/api/auth/guest` returns 500.
 
 ---
 

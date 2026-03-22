@@ -24,7 +24,7 @@ ALTER TABLE "users" ALTER COLUMN "refresh_token" DROP NOT NULL;
 --> statement-breakpoint
 ALTER TABLE "users" ALTER COLUMN "token_expires_at" DROP NOT NULL;
 --> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "display_name" text;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "display_name" text;
 --> statement-breakpoint
 -- Add seller shipping cost to orders for profit calculation (eBay lineItems.deliveryCost.shippingCost).
-ALTER TABLE "orders" ADD COLUMN "shipping_cost" numeric(12, 2);
+ALTER TABLE "orders" ADD COLUMN IF NOT EXISTS "shipping_cost" numeric(12, 2);
