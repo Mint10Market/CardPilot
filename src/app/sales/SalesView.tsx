@@ -19,6 +19,10 @@ type EbayRawPayload = {
     quantity?: number;
     lineItemCost?: { value?: string };
     discountedLineItemCost?: { value?: string };
+    deliveryCost?: {
+      shippingCost?: { value?: string };
+      handlingCost?: { value?: string };
+    };
   }>;
 };
 type OrderRow = {
@@ -53,6 +57,18 @@ function fmtMoney(value: string | number): string {
   return Number.isFinite(n) ? n.toFixed(2) : String(value);
 }
 
+function getShippingLabelCost(rawPayload: unknown): number {
+  const raw = rawPayload as EbayRawPayload | null | undefined;
+  const items = Array.isArray(raw?.lineItems) ? raw!.lineItems : [];
+  let sum = 0;
+  for (const li of items) {
+    const ship = li?.deliveryCost?.shippingCost?.value;
+    const v = typeof ship === "string" ? parseFloat(ship) : Number(ship);
+    if (Number.isFinite(v)) sum += v;
+  }
+  return Math.round(sum * 100) / 100;
+}
+
 function TransactionBreakdownModal({
   row,
   onClose,
@@ -66,10 +82,12 @@ function TransactionBreakdownModal({
     const orderTotalRaw = raw?.pricingSummary?.total?.value ?? "";
     const orderTotal = orderTotalRaw ? parseFloat(orderTotalRaw) : parseFloat(String(o.totalAmount ?? 0));
     const shippingChargedToBuyer = raw?.pricingSummary?.deliveryCost?.value != null ? parseFloat(raw.pricingSummary.deliveryCost.value) : 0;
+    const shippingLabelCost = getShippingLabelCost(o.rawPayload);
+    const hasLineItems = Array.isArray((o.rawPayload as unknown as { lineItems?: unknown }).lineItems);
     const deduction = computeOrderDeductions({
       orderTotal,
       fees: o.fees,
-      shippingCost: o.shippingCost,
+      shippingCost: hasLineItems ? shippingLabelCost : o.shippingCost,
       useFeeEstimate: true,
       shippingChargedToBuyer,
     });
@@ -531,12 +549,16 @@ export function SalesView() {
             ) : (
               all.map((row) => {
                 const amountNum = parseFloat(row.amount);
+                const shippingLabelCost = getShippingLabelCost(row.record.rawPayload);
+                const hasLineItems = Array.isArray(
+                  (row.record.rawPayload as unknown as { lineItems?: unknown }).lineItems
+                );
                 const deduction =
                   row.type === "eBay"
                     ? computeOrderDeductions({
                         orderTotal: amountNum,
                         fees: row.record.fees,
-                        shippingCost: row.record.shippingCost,
+                        shippingCost: hasLineItems ? shippingLabelCost : row.record.shippingCost,
                         useFeeEstimate: true,
                         shippingChargedToBuyer: row.record.rawPayload?.pricingSummary?.deliveryCost?.value != null
                           ? parseFloat(row.record.rawPayload.pricingSummary.deliveryCost.value!)

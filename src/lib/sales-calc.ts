@@ -13,27 +13,36 @@ function n(val: string | number | null | undefined): number {
   return Number.isFinite(x) ? x : 0;
 }
 
-/** eBay fee estimation (matches collection-calc logic): FVF + promoted listing, no G&S. */
+/**
+ * eBay fee estimation (matches eBay “Transaction fees” as shown in the order breakdown UI).
+ *
+ * Assumptions based on the fulfillment payload we store:
+ * - `orderTotal` already includes shipping charged to the buyer
+ * - We model: (FVF after TRS discount) + fixed per-order transaction fee
+ * - We do not add a separate promoted-listing ad fee here (it would overstate vs the UI)
+ */
 const FVF_RATE = 0.1235;
 const TRS_DISCOUNT_RATE = 0.1;
 const FVF_FIXED_PER_ORDER = 0.3;
-const PROMOTED_LISTING_RATE = 0.05;
 
 /**
- * Estimate eBay seller fees when API data is missing. Uses order total + shipping charged to buyer as fee base.
+ * Estimate eBay seller fees when API data is missing.
+ *
+ * Uses `orderTotal` as the fee base (our stored `totalAmount` already includes shipping).
  */
 export function getOrderFeesEstimate(
   orderTotal: number,
   shippingChargedToBuyer: number = 0
 ): number {
   if (orderTotal <= 0) return 0;
-  const feeBase = roundTo2(orderTotal + shippingChargedToBuyer);
+  // Fulfillment `pricingSummary.total` already includes shipping, so we should not add it again.
+  const feeBase = roundTo2(orderTotal);
   const fvfGross = roundTo2(feeBase * FVF_RATE);
   const trsDiscount = roundTo2(fvfGross * TRS_DISCOUNT_RATE);
   const fvfNet = roundTo2(fvfGross - trsDiscount);
   const transactionFees = roundTo2(fvfNet + FVF_FIXED_PER_ORDER);
-  const adFee = roundTo2(feeBase * PROMOTED_LISTING_RATE);
-  return roundTo2(transactionFees + adFee);
+  void shippingChargedToBuyer; // kept for signature compatibility; not needed with our base assumption.
+  return roundTo2(transactionFees);
 }
 
 export interface OrderDeductionInputs {
@@ -43,7 +52,7 @@ export interface OrderDeductionInputs {
   costOfCard?: string | number | null | undefined;
   /** When true, use getOrderFeesEstimate when fees are missing (for eBay orders). */
   useFeeEstimate?: boolean;
-  /** Shipping charged to buyer (for fee estimate base). */
+  /** Kept for backward compatibility; not needed with our current fee-base assumption. */
   shippingChargedToBuyer?: number;
 }
 
@@ -89,7 +98,7 @@ export interface OrderRowForCalc {
   fees?: string | number | null;
   shippingCost?: string | number | null;
   costOfCard?: string | number | null;
-  /** For eBay: use estimate when fees missing; and shipping charged to buyer for fee base. */
+  /** For eBay: use estimate when fees missing. */
   shippingChargedToBuyer?: number;
 }
 
@@ -106,7 +115,30 @@ export interface PeriodTotals {
  * Compute period-level totals from arrays of orders and manual sales.
  * eBay rows: use computeOrderDeductions with useFeeEstimate true when fees missing.
  */
-type RawPayloadForFees = { pricingSummary?: { deliveryCost?: { value?: string } } } | null | undefined;
+type RawPayloadForFees =
+  | {
+      pricingSummary?: { deliveryCost?: { value?: string } };
+      // line items contain the "shipping label" cost components
+      lineItems?: Array<{
+        deliveryCost?: {
+          shippingCost?: { value?: string };
+          handlingCost?: { value?: string };
+        };
+      }>;
+    }
+  | null
+  | undefined;
+
+function getShippingLabelCostFromRawPayload(raw: unknown): number {
+  const r = raw as RawPayloadForFees;
+  const items = Array.isArray(r?.lineItems) ? r!.lineItems : [];
+  let sum = 0;
+  for (const li of items) {
+    const ship = li?.deliveryCost?.shippingCost?.value;
+    sum += n(ship);
+  }
+  return roundTo2(sum);
+}
 
 export function computePeriodTotals(
   ebayOrders: Array<{
@@ -127,10 +159,13 @@ export function computePeriodTotals(
     const amt = n(o.totalAmount);
     const raw = o.rawPayload as RawPayloadForFees;
     const shipToBuyer = n(raw?.pricingSummary?.deliveryCost?.value);
+    const shippingLabelCost = getShippingLabelCostFromRawPayload(raw);
+    const hasLineItems = Array.isArray(raw?.lineItems);
     const calc = computeOrderDeductions({
       orderTotal: amt,
       fees: o.fees,
-      shippingCost: o.shippingCost,
+      // Prefer raw payload "shipping label" value (excludes handling).
+      shippingCost: hasLineItems ? shippingLabelCost : o.shippingCost,
       costOfCard: o.costOfCard,
       useFeeEstimate: true,
       shippingChargedToBuyer: shipToBuyer,

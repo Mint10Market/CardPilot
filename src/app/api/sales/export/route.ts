@@ -10,6 +10,27 @@ function escapeCsv(s: string): string {
   return s;
 }
 
+function getShippingLabelCost(rawPayload: unknown): number {
+  const raw = rawPayload as
+    | {
+        lineItems?: Array<{
+          deliveryCost?: {
+            shippingCost?: { value?: string };
+          };
+        }>;
+      }
+    | null
+    | undefined;
+  const items = Array.isArray(raw?.lineItems) ? raw!.lineItems : [];
+  let sum = 0;
+  for (const li of items) {
+    const ship = li?.deliveryCost?.shippingCost?.value;
+    const v = typeof ship === "string" ? parseFloat(ship) : NaN;
+    if (Number.isFinite(v)) sum += v;
+  }
+  return Math.round(sum * 100) / 100;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await requireUser();
@@ -42,10 +63,12 @@ export async function GET(request: NextRequest) {
         raw?.pricingSummary?.deliveryCost?.value != null
           ? parseFloat(raw.pricingSummary.deliveryCost.value)
           : 0;
+      const shippingLabelCost = getShippingLabelCost(o.rawPayload);
+      const hasLineItems = Array.isArray((o.rawPayload as unknown as { lineItems?: unknown }).lineItems);
       const d = computeOrderDeductions({
         orderTotal: amt,
         fees: o.fees,
-        shippingCost: o.shippingCost,
+        shippingCost: hasLineItems ? shippingLabelCost : o.shippingCost,
         useFeeEstimate: true,
         shippingChargedToBuyer: shipToBuyer,
       });

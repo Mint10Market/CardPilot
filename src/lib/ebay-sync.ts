@@ -172,9 +172,10 @@ export async function syncOrdersForUser(
       const { value: totalAmount, currency } = getOrderTotal(o);
       const feeValue = o.pricingSummary?.fee != null ? amountValue(o.pricingSummary.fee) : null;
       const shippingTotal = (o.lineItems ?? []).reduce((sum, li) => {
+        // Match eBay's "Shipping label" number (not the "shipping charged to buyer").
+        // On the fulfillment payload, label cost comes from `shippingCost`; `handlingCost` is not shown in that UI line.
         const ship = li.deliveryCost?.shippingCost != null ? Number(amountValue(li.deliveryCost.shippingCost)) || 0 : 0;
-        const hand = li.deliveryCost?.handlingCost != null ? Number(amountValue(li.deliveryCost.handlingCost)) || 0 : 0;
-        return sum + ship + hand;
+        return sum + ship;
       }, 0);
       const shippingValue = shippingTotal > 0 ? String(shippingTotal.toFixed(2)) : null;
       const lineItems = (o.lineItems ?? []).map((li) => ({
