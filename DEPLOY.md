@@ -150,10 +150,12 @@ Manual uploads use **POST `/api/uploads/item-image`** (multipart field `file`). 
    - **`NEXT_PUBLIC_SUPABASE_URL`** — project URL (e.g. `https://xxx.supabase.co`)
    - **`SUPABASE_SERVICE_ROLE_KEY`** — **server only**, never expose to the client
    - **`SUPABASE_ITEM_IMAGES_BUCKET`** (optional) — defaults to `item-images`
-4. Run DB migration **`0006_inventory_collection_fields`** so `primary_image_url` / `image_url` columns exist:
-   - **Recommended:** `npm run db:migrate` (from project root with `DATABASE_URL` in `.env.local`).
-   - **Or:** `npm run apply:0006` (idempotent column adds; same SQL as `drizzle/0006_inventory_collection_fields.sql`).
-   - **Or:** paste that SQL file into Supabase → **SQL Editor** → Run.
+4. Apply DB migrations (inventory/collection columns, etc.):
+   - **Recommended:** `npm run db:apply` — runs Drizzle’s migrator on `./drizzle` (records `__drizzle_migrations`; same end result as `db:migrate`). Needs `DATABASE_URL` in `.env.local` (or `.env`).
+   - **Or:** `npm run db:migrate` (uses `drizzle-kit`; same `DATABASE_URL` requirement).
+   - **Or:** `npm run apply:0006` — alias for `db:apply`.
+   - **Or:** paste `drizzle/0006_inventory_collection_fields.sql` into Supabase → **SQL Editor** if you cannot run Node locally.
+   - **Or (no terminal):** GitHub → **Actions** → **Apply database migrations** → **Run workflow**. Add repository secret **`DATABASE_URL`** once (Supabase pooler URI, same as Vercel).
 
 **eBay listing cost:** Optional env **`EBAY_INVENTORY_COST_ASPECT_NAMES`** (comma-separated aspect names) if your tool uses custom item specifics. See `.env.example`.
 

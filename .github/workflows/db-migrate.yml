@@ -1,0 +1,29 @@
+# Run pending Drizzle migrations against Supabase (or any Postgres) without a local terminal.
+# One-time setup: Repo → Settings → Secrets → Actions → New repository secret
+#   Name: DATABASE_URL
+#   Value: Supabase **pooler** URI (Connect panel, often port 6543)
+# Then: Actions → "Apply database migrations" → Run workflow
+
+name: Apply database migrations
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run db:apply

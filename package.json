@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:apply": "node scripts/apply-migrations.mjs",
     "db:push": "drizzle-kit push",
     "align:check": "node scripts/verify-alignment.mjs",
     "apply:0005": "node scripts/apply-migration-0005.mjs",
