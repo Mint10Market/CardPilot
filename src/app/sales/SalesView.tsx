@@ -549,21 +549,25 @@ export function SalesView() {
             ) : (
               all.map((row) => {
                 const amountNum = parseFloat(row.amount);
-                const shippingLabelCost = getShippingLabelCost(row.record.rawPayload);
-                const hasLineItems = Array.isArray(
-                  (row.record.rawPayload as unknown as { lineItems?: unknown }).lineItems
-                );
                 const deduction =
                   row.type === "eBay"
-                    ? computeOrderDeductions({
-                        orderTotal: amountNum,
-                        fees: row.record.fees,
-                        shippingCost: hasLineItems ? shippingLabelCost : row.record.shippingCost,
-                        useFeeEstimate: true,
-                        shippingChargedToBuyer: row.record.rawPayload?.pricingSummary?.deliveryCost?.value != null
-                          ? parseFloat(row.record.rawPayload.pricingSummary.deliveryCost.value!)
-                          : 0,
-                      })
+                    ? (() => {
+                        const o = row.record;
+                        const shippingLabelCost = getShippingLabelCost(o.rawPayload);
+                        const hasLineItems = Array.isArray(
+                          (o.rawPayload as unknown as { lineItems?: unknown }).lineItems
+                        );
+                        return computeOrderDeductions({
+                          orderTotal: amountNum,
+                          fees: o.fees,
+                          shippingCost: hasLineItems ? shippingLabelCost : o.shippingCost,
+                          useFeeEstimate: true,
+                          shippingChargedToBuyer:
+                            o.rawPayload?.pricingSummary?.deliveryCost?.value != null
+                              ? parseFloat(o.rawPayload.pricingSummary.deliveryCost.value!)
+                              : 0,
+                        });
+                      })()
                     : { fees: 0, shippingCost: 0, totalDeductions: 0, net: amountNum };
                 return (
                   <tr key={row.id} className="border-b border-[var(--border)]">
