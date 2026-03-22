@@ -1,7 +1,8 @@
 # Run pending Drizzle migrations against Supabase (or any Postgres) without a local terminal.
 # One-time setup: Repo → Settings → Secrets → Actions → New repository secret
 #   Name: DATABASE_URL
-#   Value: Supabase **pooler** URI (Connect panel, often port 6543)
+#   Value: Supabase **pooler** URI (Connect panel, often port 6543). Prefer the host labeled **IPv4 compatible**
+#   in Supabase Connect — GitHub-hosted runners often hit ENETUNREACH if DNS returns IPv6 first.
 # Then: Actions → "Apply database migrations" → Run workflow
 
 name: Apply database migrations
@@ -26,6 +27,8 @@ jobs:
       - name: Apply migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Avoid ENETUNREACH to IPv6 pooler addresses on ubuntu-latest (prefer A record).
+          NODE_OPTIONS: --dns-result-order=ipv4first
         run: |
           if [ -z "$DATABASE_URL" ]; then
             echo "::error::Repository secret DATABASE_URL is not set. Add it under Settings → Secrets and variables → Actions (Supabase pooler URI, port 6543). CI failures on lint/build do not block this workflow — you can run migrations anytime."

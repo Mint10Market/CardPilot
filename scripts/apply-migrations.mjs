@@ -10,13 +10,18 @@
  *
  * Needs a Postgres URL (Supabase: use **Session pooler** or **Transaction** pooler from
  * Dashboard → Connect — often port **6543**, not the direct db.*.supabase.co URL on Vercel.)
+ *
+ * GitHub Actions and some networks cannot reach IPv6-only routes; prefer IPv4 when both A and AAAA exist.
  */
+import dns from "node:dns";
 import { config } from "dotenv";
-import { dirname, join, resolve } from "path";
-import { fileURLToPath } from "url";
-import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { dirname, join, resolve } from "path";
+import postgres from "postgres";
+import { fileURLToPath } from "url";
+
+dns.setDefaultResultOrder("ipv4first");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
